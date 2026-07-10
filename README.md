@@ -71,7 +71,7 @@ authentication module`) once it builds, lints, and passes tests.
 | 2 | Docker Infrastructure | Complete |
 | 3 | PostgreSQL | Complete |
 | 4 | Redis | Complete |
-| 5 | NestJS Backend Setup | Pending |
+| 5 | NestJS Backend Setup | Complete |
 | 6 | React Frontend Setup | Pending |
 | 7 | Authentication | Pending |
 | 8 | Users | Pending |
