@@ -1,6 +1,6 @@
 # Module 01 — Project Initialization
 
-## Status: In Progress
+## Status: Complete
 
 ## What was built
 
