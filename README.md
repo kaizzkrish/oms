@@ -68,8 +68,8 @@ authentication module`) once it builds, lints, and passes tests.
 | # | Module | Status |
 |---|--------|--------|
 | 1 | Project Initialization | Complete |
-| 2 | Docker Infrastructure | Pending |
-| 3 | PostgreSQL | Pending |
+| 2 | Docker Infrastructure | Complete |
+| 3 | PostgreSQL | Complete |
 | 4 | Redis | Pending |
 | 5 | NestJS Backend Setup | Pending |
 | 6 | React Frontend Setup | Pending |

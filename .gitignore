@@ -37,6 +37,7 @@ Thumbs.db
 
 # Prisma
 backend/prisma/*.db
+backend/src/generated/
 
 # Misc
 *.tgz
