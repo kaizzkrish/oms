@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/build
+**/coverage
+backend/src/generated
+.git
+.husky
+storage/**
+!storage/**/.gitkeep
+*.md
+.env
+.env.*
+!.env.example

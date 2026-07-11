@@ -1,0 +1,52 @@
+import '@testing-library/jest-dom/vitest';
+
+// Node's experimental native `localStorage` global (unconfigured, no
+// backing file) shadows jsdom's own implementation and throws when used.
+// Replace it with a plain in-memory implementation for tests.
+class MemoryStorage implements Storage {
+  private store = new Map<string, string>();
+
+  get length(): number {
+    return this.store.size;
+  }
+
+  clear(): void {
+    this.store.clear();
+  }
+
+  getItem(key: string): string | null {
+    return this.store.has(key) ? this.store.get(key)! : null;
+  }
+
+  key(index: number): string | null {
+    return Array.from(this.store.keys())[index] ?? null;
+  }
+
+  removeItem(key: string): void {
+    this.store.delete(key);
+  }
+
+  setItem(key: string, value: string): void {
+    this.store.set(key, value);
+  }
+}
+
+Object.defineProperty(window, 'localStorage', {
+  value: new MemoryStorage(),
+  writable: true,
+});
+
+// jsdom does not implement matchMedia; the theme-mode slice reads it at
+// import time to derive the OS-preferred color scheme.
+if (!window.matchMedia) {
+  window.matchMedia = (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    dispatchEvent: () => false,
+  });
+}

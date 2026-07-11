@@ -1,0 +1,50 @@
+services:
+  postgres:
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  redis:
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  backend:
+    restart: always
+    environment:
+      NODE_ENV: production
+      PM2_INSTANCES: ${PM2_INSTANCES:-max}
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1g
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '5'
+
+  frontend:
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  nginx:
+    restart: always
+    ports:
+      - '80:80'
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
