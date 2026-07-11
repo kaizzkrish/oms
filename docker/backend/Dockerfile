@@ -42,4 +42,6 @@ RUN mkdir -p /app/storage && chown -R nodeusr:nodegrp /app
 USER nodeusr
 
 EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=15s \
+    CMD wget -qO- "http://127.0.0.1:${BACKEND_PORT:-3000}/health" || exit 1
 CMD ["pm2-runtime", "ecosystem.config.js"]
