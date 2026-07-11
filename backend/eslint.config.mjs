@@ -32,4 +32,19 @@ export default tseslint.config(
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },
+  {
+    // jest.Mocked<T> methods referenced in `expect(mock.method).toHaveBeenCalledWith(...)`
+    // trip this rule constantly even though they're never actually called unbound.
+    // Supertest's `response.body` and jest's asymmetric matchers (`expect.any(...)`)
+    // are also untyped (`any`) by design, which is expected in test code, not a
+    // real type-safety gap the way it would be in src/.
+    files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+    },
+  },
 );

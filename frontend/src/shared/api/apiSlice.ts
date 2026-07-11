@@ -4,6 +4,6 @@ import { axiosBaseQuery } from './axiosBaseQuery';
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery(),
-  tagTypes: [],
+  tagTypes: ['Session'],
   endpoints: () => ({}),
 });

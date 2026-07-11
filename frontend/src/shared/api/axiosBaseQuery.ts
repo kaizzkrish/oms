@@ -14,12 +14,22 @@ export interface AxiosBaseQueryError {
   data: unknown;
 }
 
+/** The backend's global TransformInterceptor wraps every successful response. */
+interface SuccessEnvelope<T> {
+  success: true;
+  statusCode: number;
+  timestamp: string;
+  path: string;
+  data: T;
+}
+
 export const axiosBaseQuery =
   (): BaseQueryFn<AxiosBaseQueryArgs, unknown, AxiosBaseQueryError> =>
   async ({ url, method, data, params }) => {
     try {
       const result = await axiosInstance({ url, method, data, params });
-      return { data: result.data };
+      const envelope = result.data as SuccessEnvelope<unknown>;
+      return { data: envelope.data };
     } catch (error) {
       const axiosError = error as AxiosError;
       return {

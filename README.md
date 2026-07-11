@@ -73,7 +73,7 @@ authentication module`) once it builds, lints, and passes tests.
 | 4 | Redis | Complete |
 | 5 | NestJS Backend Setup | Complete |
 | 6 | React Frontend Setup | Complete |
-| 7 | Authentication | Pending |
+| 7 | Authentication | Complete |
 | 8 | Users | Pending |
 | 9 | Roles | Pending |
 | 10 | Permissions | Pending |

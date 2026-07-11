@@ -11,6 +11,7 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
+    seed: 'ts-node -r ./prisma/require-js-as-ts.js prisma/seed.ts',
   },
   datasource: {
     url: process.env.DATABASE_URL,
