@@ -58,6 +58,14 @@ export const router = createBrowserRouter([
               return { Component: UsersListPage };
             },
           },
+          {
+            path: 'roles',
+            handle: { crumb: () => 'Roles' },
+            lazy: async () => {
+              const { RolesListPage } = await import('../features/roles/RolesListPage');
+              return { Component: RolesListPage };
+            },
+          },
         ],
       },
     ],
