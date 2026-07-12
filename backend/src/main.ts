@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 // been observed to carry leftover env vars from unrelated projects.
 dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
@@ -31,6 +32,7 @@ async function bootstrap(): Promise<void> {
   const backendConfig = configService.get('backend', { infer: true });
 
   app.use(helmet());
+  app.use(cookieParser());
   app.enableCors({ origin: backendConfig.corsOrigin, credentials: true });
   app.setGlobalPrefix(backendConfig.apiPrefix, { exclude: ['health'] });
   app.useGlobalPipes(
