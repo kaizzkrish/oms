@@ -101,6 +101,15 @@ export const router = createBrowserRouter([
               return { Component: OfficesListPage };
             },
           },
+          {
+            path: 'departments',
+            handle: { crumb: () => 'Departments' },
+            lazy: async () => {
+              const { DepartmentsListPage } =
+                await import('../features/departments/DepartmentsListPage');
+              return { Component: DepartmentsListPage };
+            },
+          },
         ],
       },
     ],

@@ -10,6 +10,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
+import { DepartmentsService } from '../src/modules/departments/departments.service';
 import { OfficesService } from '../src/modules/offices/offices.service';
 import { OrganizationsService } from '../src/modules/organizations/organizations.service';
 import { PermissionGroupsService } from '../src/modules/permission-groups/permission-groups.service';
@@ -39,6 +40,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Organization Management',
     description: 'Managing organizations and their offices',
+  },
+  {
+    name: 'Department Management',
+    description: 'Managing departments',
   },
 ] as const;
 
@@ -171,6 +176,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore offices',
     group: 'Organization Management',
   },
+  {
+    name: 'Departments.View',
+    description: 'View departments',
+    group: 'Department Management',
+  },
+  {
+    name: 'Departments.Create',
+    description: 'Create departments',
+    group: 'Department Management',
+  },
+  {
+    name: 'Departments.Update',
+    description: 'Update departments',
+    group: 'Department Management',
+  },
+  {
+    name: 'Departments.Delete',
+    description: 'Delete or restore departments',
+    group: 'Department Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -182,6 +207,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Roles.View',
   'Organizations.View',
   'Offices.View',
+  'Departments.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -200,6 +226,12 @@ const SAMPLE_OFFICE = {
   postalCode: '400001',
 };
 
+const SAMPLE_DEPARTMENT = {
+  name: 'Engineering',
+  code: 'ENG',
+  description: 'Builds and maintains the product',
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -210,6 +242,7 @@ async function main(): Promise<void> {
   const permissionsService = app.get(PermissionsService);
   const organizationsService = app.get(OrganizationsService);
   const officesService = app.get(OfficesService);
+  const departmentsService = app.get(DepartmentsService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -364,14 +397,40 @@ async function main(): Promise<void> {
     sortBy: 'name',
     sortOrder: 'asc',
   });
-  if (existingOffices.items.length > 0) {
+  let office = existingOffices.items[0];
+  if (office) {
     Logger.log(`Sample office already exists: ${SAMPLE_OFFICE.name}`, 'Seed');
   } else {
-    await officesService.createOffice(
+    office = await officesService.createOffice(
       { ...SAMPLE_OFFICE, organizationId: organization.id },
       adminUser?.id,
     );
     Logger.log(`Sample office created: ${SAMPLE_OFFICE.name}`, 'Seed');
+  }
+
+  const existingDepartments = await departmentsService.listDepartments({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_DEPARTMENT.name,
+    organizationId: organization.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingDepartments.items.length > 0) {
+    Logger.log(
+      `Sample department already exists: ${SAMPLE_DEPARTMENT.name}`,
+      'Seed',
+    );
+  } else {
+    await departmentsService.createDepartment(
+      {
+        ...SAMPLE_DEPARTMENT,
+        organizationId: organization.id,
+        officeId: office.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample department created: ${SAMPLE_DEPARTMENT.name}`, 'Seed');
   }
 
   await app.close();

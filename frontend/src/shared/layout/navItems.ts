@@ -1,3 +1,4 @@
+import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 import DomainOutlinedIcon from '@mui/icons-material/DomainOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
@@ -53,6 +54,12 @@ export const navItems: NavItem[] = [
     path: '/offices',
     icon: BusinessOutlinedIcon,
     permission: 'Offices.View',
+  },
+  {
+    label: 'Departments',
+    path: '/departments',
+    icon: AccountTreeOutlinedIcon,
+    permission: 'Departments.View',
   },
   { label: 'Profile', path: '/profile', icon: PersonOutlineOutlinedIcon },
 ];
