@@ -50,6 +50,14 @@ export const router = createBrowserRouter([
               return { Component: ProfilePage };
             },
           },
+          {
+            path: 'users',
+            handle: { crumb: () => 'Users' },
+            lazy: async () => {
+              const { UsersListPage } = await import('../features/users/UsersListPage');
+              return { Component: UsersListPage };
+            },
+          },
         ],
       },
     ],

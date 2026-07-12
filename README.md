@@ -74,7 +74,7 @@ authentication module`) once it builds, lints, and passes tests.
 | 5 | NestJS Backend Setup | Complete |
 | 6 | React Frontend Setup | Complete |
 | 7 | Authentication | Complete |
-| 8 | Users | Pending |
+| 8 | Users | Complete |
 | 9 | Roles | Pending |
 | 10 | Permissions | Pending |
 | 11 | Organizations | Pending |
