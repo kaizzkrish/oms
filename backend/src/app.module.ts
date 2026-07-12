@@ -12,6 +12,7 @@ import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { RolesModule } from './modules/roles/roles.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 
@@ -47,6 +48,7 @@ import { RedisModule } from './redis/redis.module';
     PasswordModule,
     HealthModule,
     AuthModule,
+    RolesModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

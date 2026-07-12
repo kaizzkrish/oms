@@ -75,7 +75,7 @@ authentication module`) once it builds, lints, and passes tests.
 | 6 | React Frontend Setup | Complete |
 | 7 | Authentication | Complete |
 | 8 | Users | Complete |
-| 9 | Roles | Pending |
+| 9 | Roles | Complete |
 | 10 | Permissions | Pending |
 | 11 | Organizations | Pending |
 | 12 | Departments | Pending |

@@ -39,8 +39,58 @@ model User {
   sessions            Session[]
   passwordResetTokens PasswordResetToken[]
 
+  createdRoles Role[] @relation("RoleCreatedBy")
+  updatedRoles Role[] @relation("RoleUpdatedBy")
+  deletedRoles Role[] @relation("RoleDeletedBy")
+
+  userRoles         UserRole[] @relation("UserRoleUser")
+  assignedUserRoles UserRole[] @relation("UserRoleAssignedBy")
+
   @@index([email])
   @@map("users")
+}
+
+model Role {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  isSystem    Boolean @default(false)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("RoleCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("RoleUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("RoleDeletedBy", fields: [deletedBy], references: [id])
+
+  userRoles UserRole[]
+
+  @@index([name])
+  @@map("roles")
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation("UserRoleUser", fields: [userId], references: [id], onDelete: Cascade)
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+  assignedBy String?
+
+  assignedByUser User? @relation("UserRoleAssignedBy", fields: [assignedBy], references: [id])
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
 }
 
 model Session {
