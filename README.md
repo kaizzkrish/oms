@@ -78,7 +78,7 @@ authentication module`) once it builds, lints, and passes tests.
 | 9 | Roles | Complete |
 | 10 | Permissions | Complete |
 | 11 | Organizations | Complete |
-| 12 | Departments | Pending |
+| 12 | Departments | Complete |
 | 13 | Designations | Pending |
 | 14 | Employees | Pending |
 | 15 | Teams | Pending |

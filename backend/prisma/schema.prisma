@@ -64,6 +64,10 @@ model User {
   updatedOffices Office[] @relation("OfficeUpdatedBy")
   deletedOffices Office[] @relation("OfficeDeletedBy")
 
+  createdDepartments Department[] @relation("DepartmentCreatedBy")
+  updatedDepartments Department[] @relation("DepartmentUpdatedBy")
+  deletedDepartments Department[] @relation("DepartmentDeletedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -207,7 +211,8 @@ model Organization {
   updatedByUser User? @relation("OrganizationUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("OrganizationDeletedBy", fields: [deletedBy], references: [id])
 
-  offices Office[]
+  offices     Office[]
+  departments Department[]
 
   @@index([name])
   @@map("organizations")
@@ -242,9 +247,41 @@ model Office {
   updatedByUser User? @relation("OfficeUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("OfficeDeletedBy", fields: [deletedBy], references: [id])
 
+  departments Department[]
+
   @@index([organizationId])
   @@index([name])
   @@map("offices")
+}
+
+model Department {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  officeId       String?
+  office         Office?      @relation(fields: [officeId], references: [id], onDelete: SetNull)
+
+  name        String
+  code        String?
+  description String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("DepartmentCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("DepartmentUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("DepartmentDeletedBy", fields: [deletedBy], references: [id])
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([officeId])
+  @@map("departments")
 }
 
 model Session {
