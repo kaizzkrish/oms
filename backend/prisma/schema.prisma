@@ -56,6 +56,14 @@ model User {
 
   assignedRolePermissions RolePermission[] @relation("RolePermissionAssignedBy")
 
+  createdOrganizations Organization[] @relation("OrganizationCreatedBy")
+  updatedOrganizations Organization[] @relation("OrganizationUpdatedBy")
+  deletedOrganizations Organization[] @relation("OrganizationDeletedBy")
+
+  createdOffices Office[] @relation("OfficeCreatedBy")
+  updatedOffices Office[] @relation("OfficeUpdatedBy")
+  deletedOffices Office[] @relation("OfficeDeletedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -173,6 +181,70 @@ model RolePermission {
   @@index([roleId])
   @@index([permissionId])
   @@map("role_permissions")
+}
+
+model Organization {
+  id                 String  @id @default(uuid())
+  name               String  @unique
+  legalName          String?
+  registrationNumber String?
+  industry           String?
+  website            String?
+  email              String?
+  phone              String?
+  logoUrl            String?
+  isActive           Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("OrganizationCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("OrganizationUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("OrganizationDeletedBy", fields: [deletedBy], references: [id])
+
+  offices Office[]
+
+  @@index([name])
+  @@map("organizations")
+}
+
+model Office {
+  id             String  @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name          String
+  isHeadquarters Boolean @default(false)
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  state         String?
+  country       String
+  postalCode    String?
+  phone         String?
+  email         String?
+  isActive      Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("OfficeCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("OfficeUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("OfficeDeletedBy", fields: [deletedBy], references: [id])
+
+  @@index([organizationId])
+  @@index([name])
+  @@map("offices")
 }
 
 model Session {

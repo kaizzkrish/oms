@@ -10,6 +10,8 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
+import { OfficesService } from '../src/modules/offices/offices.service';
+import { OrganizationsService } from '../src/modules/organizations/organizations.service';
 import { PermissionGroupsService } from '../src/modules/permission-groups/permission-groups.service';
 import { PermissionsService } from '../src/modules/permissions/permissions.service';
 import { RolesService } from '../src/modules/roles/roles.service';
@@ -33,6 +35,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Permission Management',
     description: 'Managing permissions and permission groups',
+  },
+  {
+    name: 'Organization Management',
+    description: 'Managing organizations and their offices',
   },
 ] as const;
 
@@ -125,13 +131,74 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore permission groups',
     group: 'Permission Management',
   },
+  {
+    name: 'Organizations.View',
+    description: 'View organizations',
+    group: 'Organization Management',
+  },
+  {
+    name: 'Organizations.Create',
+    description: 'Create organizations',
+    group: 'Organization Management',
+  },
+  {
+    name: 'Organizations.Update',
+    description: 'Update organizations',
+    group: 'Organization Management',
+  },
+  {
+    name: 'Organizations.Delete',
+    description: 'Delete or restore organizations',
+    group: 'Organization Management',
+  },
+  {
+    name: 'Offices.View',
+    description: 'View offices',
+    group: 'Organization Management',
+  },
+  {
+    name: 'Offices.Create',
+    description: 'Create offices',
+    group: 'Organization Management',
+  },
+  {
+    name: 'Offices.Update',
+    description: 'Update offices',
+    group: 'Organization Management',
+  },
+  {
+    name: 'Offices.Delete',
+    description: 'Delete or restore offices',
+    group: 'Organization Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
 // full management stays exclusive to Admin. Employee gets no permissions of
 // its own yet — future modules (Tasks, Projects, ...) will add the
 // permissions a regular employee actually needs.
-const TEAM_LEADER_PERMISSIONS = ['Users.View', 'Roles.View'];
+const TEAM_LEADER_PERMISSIONS = [
+  'Users.View',
+  'Roles.View',
+  'Organizations.View',
+  'Offices.View',
+];
+
+const SAMPLE_ORGANIZATION = {
+  name: 'Acme Corporation',
+  legalName: 'Acme Corporation Pvt. Ltd.',
+  industry: 'Information Technology',
+};
+
+const SAMPLE_OFFICE = {
+  name: 'Headquarters',
+  isHeadquarters: true,
+  addressLine1: '1 Corporate Park',
+  city: 'Mumbai',
+  state: 'Maharashtra',
+  country: 'India',
+  postalCode: '400001',
+};
 
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
@@ -141,6 +208,8 @@ async function main(): Promise<void> {
   const rolesService = app.get(RolesService);
   const permissionGroupsService = app.get(PermissionGroupsService);
   const permissionsService = app.get(PermissionsService);
+  const organizationsService = app.get(OrganizationsService);
+  const officesService = app.get(OfficesService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -266,6 +335,43 @@ async function main(): Promise<void> {
       'Assigned view-only permissions to the Team Leader role',
       'Seed',
     );
+  }
+
+  let organization = await organizationsService.findByName(
+    SAMPLE_ORGANIZATION.name,
+  );
+  if (organization) {
+    Logger.log(
+      `Sample organization already exists: ${SAMPLE_ORGANIZATION.name}`,
+      'Seed',
+    );
+  } else {
+    organization = await organizationsService.createOrganization(
+      SAMPLE_ORGANIZATION,
+      adminUser?.id,
+    );
+    Logger.log(
+      `Sample organization created: ${SAMPLE_ORGANIZATION.name}`,
+      'Seed',
+    );
+  }
+
+  const existingOffices = await officesService.listOffices({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_OFFICE.name,
+    organizationId: organization.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingOffices.items.length > 0) {
+    Logger.log(`Sample office already exists: ${SAMPLE_OFFICE.name}`, 'Seed');
+  } else {
+    await officesService.createOffice(
+      { ...SAMPLE_OFFICE, organizationId: organization.id },
+      adminUser?.id,
+    );
+    Logger.log(`Sample office created: ${SAMPLE_OFFICE.name}`, 'Seed');
   }
 
   await app.close();
