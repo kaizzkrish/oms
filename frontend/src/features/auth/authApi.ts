@@ -22,6 +22,10 @@ export const authApi = apiSlice.injectEndpoints({
       query: (body) => ({ url: '/auth/login', method: 'POST', data: body }),
       onQueryStarted: async (_arg, { queryFulfilled, dispatch }) => {
         const { data } = await queryFulfilled;
+        // Clears any RTK Query cache left over from a previous account in
+        // this tab (e.g. permissions, role/user lists) so nothing from the
+        // old session's cache is briefly shown under the new identity.
+        dispatch(apiSlice.util.resetApiState());
         dispatch(setCredentials(data));
       },
     }),
@@ -39,6 +43,7 @@ export const authApi = apiSlice.injectEndpoints({
           await queryFulfilled;
         } finally {
           dispatch(clearCredentials());
+          dispatch(apiSlice.util.resetApiState());
         }
       },
     }),

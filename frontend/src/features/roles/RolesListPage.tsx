@@ -2,6 +2,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import EditIcon from '@mui/icons-material/EditOutlined';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
+import LockIcon from '@mui/icons-material/LockOutlined';
 import RestoreIcon from '@mui/icons-material/RestoreOutlined';
 import {
   Alert,
@@ -29,7 +30,9 @@ import { useAppDispatch } from '../../app/hooks';
 import { showToast } from '../../app/notificationsSlice';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
 import { getErrorMessage } from '../../shared/api/getErrorMessage';
+import { useHasPermission } from '../../shared/hooks/usePermissions';
 import { RoleFormDialog, type RoleFormValues } from './RoleFormDialog';
+import { RolePermissionsDialog } from './RolePermissionsDialog';
 import { RoleUsersDialog } from './RoleUsersDialog';
 import {
   useCreateRoleMutation,
@@ -50,6 +53,10 @@ const columns: { field: SortableField; label: string }[] = [
 
 export function RolesListPage() {
   const dispatch = useAppDispatch();
+  const canCreate = useHasPermission('Roles.Create');
+  const canUpdate = useHasPermission('Roles.Update');
+  const canDelete = useHasPermission('Roles.Delete');
+
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(10);
   const [searchInput, setSearchInput] = useState('');
@@ -62,6 +69,9 @@ export function RolesListPage() {
   const [editingRole, setEditingRole] = useState<RoleRecord | undefined>(undefined);
   const [pendingDelete, setPendingDelete] = useState<RoleRecord | undefined>(undefined);
   const [managingRole, setManagingRole] = useState<RoleRecord | undefined>(undefined);
+  const [managingPermissionsRole, setManagingPermissionsRole] = useState<RoleRecord | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -156,9 +166,11 @@ export function RolesListPage() {
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
           Roles
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateForm}>
-          New Role
-        </Button>
+        {canCreate ? (
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateForm}>
+            New Role
+          </Button>
+        ) : null}
       </Stack>
 
       <Stack direction="row" spacing={2}>
@@ -231,13 +243,24 @@ export function RolesListPage() {
                     />
                   </TableCell>
                   <TableCell>
-                    <Button
-                      size="small"
-                      startIcon={<GroupIcon fontSize="small" />}
-                      onClick={() => setManagingRole(role)}
-                    >
-                      {role.userCount}
-                    </Button>
+                    <Stack direction="row" spacing={0.5}>
+                      <Button
+                        size="small"
+                        startIcon={<GroupIcon fontSize="small" />}
+                        onClick={() => setManagingRole(role)}
+                      >
+                        {role.userCount}
+                      </Button>
+                      <Tooltip title="Manage permissions">
+                        <IconButton
+                          size="small"
+                          aria-label={`Manage permissions for ${role.name}`}
+                          onClick={() => setManagingPermissionsRole(role)}
+                        >
+                          <LockIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -247,16 +270,18 @@ export function RolesListPage() {
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Edit">
-                      <IconButton
-                        size="small"
-                        aria-label={`Edit ${role.name}`}
-                        onClick={() => openEditForm(role)}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    {role.isSystem ? null : role.isActive ? (
+                    {canUpdate ? (
+                      <Tooltip title="Edit">
+                        <IconButton
+                          size="small"
+                          aria-label={`Edit ${role.name}`}
+                          onClick={() => openEditForm(role)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    ) : null}
+                    {!role.isSystem && canDelete && role.isActive ? (
                       <Tooltip title="Delete">
                         <IconButton
                           size="small"
@@ -266,7 +291,8 @@ export function RolesListPage() {
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                    ) : (
+                    ) : null}
+                    {canUpdate && !role.isActive ? (
                       <Tooltip title="Restore">
                         <IconButton
                           size="small"
@@ -276,7 +302,7 @@ export function RolesListPage() {
                           <RestoreIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                    )}
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}
@@ -319,6 +345,12 @@ export function RolesListPage() {
         open={Boolean(managingRole)}
         role={managingRole}
         onClose={() => setManagingRole(undefined)}
+      />
+
+      <RolePermissionsDialog
+        open={Boolean(managingPermissionsRole)}
+        role={managingPermissionsRole}
+        onClose={() => setManagingPermissionsRole(undefined)}
       />
 
       <ConfirmDialog

@@ -27,6 +27,7 @@ import { useEffect, useState } from 'react';
 import { useAppDispatch } from '../../app/hooks';
 import { showToast } from '../../app/notificationsSlice';
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog';
+import { useHasPermission } from '../../shared/hooks/usePermissions';
 import { UserFormDialog, type UserFormValues } from './UserFormDialog';
 import {
   useCreateUserMutation,
@@ -49,6 +50,10 @@ const columns: { field: SortableField; label: string }[] = [
 
 export function UsersListPage() {
   const dispatch = useAppDispatch();
+  const canCreate = useHasPermission('Users.Create');
+  const canUpdate = useHasPermission('Users.Update');
+  const canDelete = useHasPermission('Users.Delete');
+
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(10);
   const [searchInput, setSearchInput] = useState('');
@@ -152,9 +157,11 @@ export function UsersListPage() {
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
           Users
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateForm}>
-          New User
-        </Button>
+        {canCreate ? (
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateForm}>
+            New User
+          </Button>
+        ) : null}
       </Stack>
 
       <Stack direction="row" spacing={2}>
@@ -224,16 +231,18 @@ export function UsersListPage() {
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Edit">
-                      <IconButton
-                        size="small"
-                        aria-label={`Edit ${user.firstName} ${user.lastName}`}
-                        onClick={() => openEditForm(user)}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    {user.isActive ? (
+                    {canUpdate ? (
+                      <Tooltip title="Edit">
+                        <IconButton
+                          size="small"
+                          aria-label={`Edit ${user.firstName} ${user.lastName}`}
+                          onClick={() => openEditForm(user)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    ) : null}
+                    {canDelete && user.isActive ? (
                       <Tooltip title="Deactivate">
                         <IconButton
                           size="small"
@@ -243,7 +252,8 @@ export function UsersListPage() {
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                    ) : (
+                    ) : null}
+                    {canUpdate && !user.isActive ? (
                       <Tooltip title="Restore">
                         <IconButton
                           size="small"
@@ -253,7 +263,7 @@ export function UsersListPage() {
                           <RestoreIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                    )}
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}

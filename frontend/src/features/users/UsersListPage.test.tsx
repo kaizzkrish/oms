@@ -8,6 +8,7 @@ import notificationsReducer from '../../app/notificationsSlice';
 import uiReducer from '../../app/uiSlice';
 import { apiSlice } from '../../shared/api/apiSlice';
 import { axiosInstance } from '../../shared/api/axiosInstance';
+import { routeAxios } from '../../test/mockAxiosRouter';
 import { UsersListPage } from './UsersListPage';
 import type { UserRecord } from './usersApi';
 
@@ -17,9 +18,7 @@ vi.mock('../../shared/api/axiosInstance', () => ({
 
 const mockedAxios = vi.mocked(axiosInstance);
 
-function envelope<T>(data: T) {
-  return { data: { success: true, statusCode: 200, timestamp: '', path: '', data } };
-}
+const ALL_USER_PERMISSIONS = ['Users.Create', 'Users.Update', 'Users.Delete'];
 
 function buildUser(overrides: Partial<UserRecord> = {}): UserRecord {
   return {
@@ -53,17 +52,20 @@ function renderWithStore() {
 }
 
 describe('UsersListPage', () => {
+  let router: ReturnType<typeof routeAxios>;
+
   beforeEach(() => {
     mockedAxios.mockReset();
+    router = routeAxios(mockedAxios, {
+      'get /permissions/me': ALL_USER_PERMISSIONS,
+    });
   });
 
   it('lists users returned by the API', async () => {
-    mockedAxios.mockResolvedValueOnce(
-      envelope({
-        items: [buildUser()],
-        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
-      }),
-    );
+    router.queue('get', '/users', {
+      items: [buildUser()],
+      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
 
     renderWithStore();
 
@@ -72,9 +74,10 @@ describe('UsersListPage', () => {
   });
 
   it('shows an empty state when there are no users', async () => {
-    mockedAxios.mockResolvedValueOnce(
-      envelope({ items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 1 } }),
-    );
+    router.queue('get', '/users', {
+      items: [],
+      meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+    });
 
     renderWithStore();
 
@@ -82,20 +85,19 @@ describe('UsersListPage', () => {
   });
 
   it('creates a user through the form dialog', async () => {
-    mockedAxios.mockResolvedValueOnce(
-      envelope({ items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 1 } }),
-    );
+    router.queue('get', '/users', {
+      items: [],
+      meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+    });
     const user = userEvent.setup();
     renderWithStore();
     await screen.findByText(/no users found/i);
 
-    mockedAxios.mockResolvedValueOnce(envelope(buildUser({ id: 'new-user' })));
-    mockedAxios.mockResolvedValueOnce(
-      envelope({
-        items: [buildUser({ id: 'new-user' })],
-        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
-      }),
-    );
+    router.queue('post', '/users', buildUser({ id: 'new-user' }));
+    router.queue('get', '/users', {
+      items: [buildUser({ id: 'new-user' })],
+      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
 
     await user.click(screen.getByRole('button', { name: /new user/i }));
     const dialog = await screen.findByRole('dialog');
@@ -113,20 +115,19 @@ describe('UsersListPage', () => {
   });
 
   it('deactivates a user after confirming the dialog', async () => {
-    mockedAxios.mockResolvedValueOnce(
-      envelope({
-        items: [buildUser()],
-        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
-      }),
-    );
+    router.queue('get', '/users', {
+      items: [buildUser()],
+      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
     const user = userEvent.setup();
     renderWithStore();
     await screen.findByText('jane@example.com');
 
-    mockedAxios.mockResolvedValueOnce(envelope(undefined));
-    mockedAxios.mockResolvedValueOnce(
-      envelope({ items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 1 } }),
-    );
+    router.queue('delete', '/users/user-1', undefined);
+    router.queue('get', '/users', {
+      items: [],
+      meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+    });
 
     await user.click(screen.getByRole('button', { name: /deactivate/i }));
     const dialog = await screen.findByRole('dialog');

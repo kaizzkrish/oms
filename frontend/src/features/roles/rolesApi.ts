@@ -1,4 +1,5 @@
 import { apiSlice } from '../../shared/api/apiSlice';
+import type { PaginatedPermissions } from '../permissions/permissionsApi';
 import type { PaginatedUsers } from '../users/usersApi';
 
 export interface RoleRecord {
@@ -46,6 +47,12 @@ export interface UpdateRoleBody {
 }
 
 export interface ListRoleUsersParams {
+  id: string;
+  page: number;
+  limit: number;
+}
+
+export interface ListRolePermissionsParams {
   id: string;
   page: number;
   limit: number;
@@ -126,6 +133,36 @@ export const rolesApi = apiSlice.injectEndpoints({
         { type: 'RoleUsers', id },
       ],
     }),
+    listRolePermissions: builder.query<PaginatedPermissions, ListRolePermissionsParams>({
+      query: ({ id, page, limit }) => ({
+        url: `/roles/${id}/permissions`,
+        method: 'GET',
+        params: { page, limit },
+      }),
+      providesTags: (_result, _error, { id }) => [{ type: 'RolePermissions' as const, id }],
+    }),
+    assignRolePermission: builder.mutation<void, { id: string; permissionId: string }>({
+      query: ({ id, permissionId }) => ({
+        url: `/roles/${id}/permissions/${permissionId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Role', id: 'LIST' },
+        { type: 'Role', id },
+        { type: 'RolePermissions', id },
+      ],
+    }),
+    unassignRolePermission: builder.mutation<void, { id: string; permissionId: string }>({
+      query: ({ id, permissionId }) => ({
+        url: `/roles/${id}/permissions/${permissionId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Role', id: 'LIST' },
+        { type: 'Role', id },
+        { type: 'RolePermissions', id },
+      ],
+    }),
   }),
 });
 
@@ -139,4 +176,7 @@ export const {
   useListRoleUsersQuery,
   useAssignRoleUserMutation,
   useUnassignRoleUserMutation,
+  useListRolePermissionsQuery,
+  useAssignRolePermissionMutation,
+  useUnassignRolePermissionMutation,
 } = rolesApi;

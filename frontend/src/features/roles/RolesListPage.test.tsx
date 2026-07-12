@@ -8,6 +8,7 @@ import notificationsReducer from '../../app/notificationsSlice';
 import uiReducer from '../../app/uiSlice';
 import { apiSlice } from '../../shared/api/apiSlice';
 import { axiosInstance } from '../../shared/api/axiosInstance';
+import { routeAxios } from '../../test/mockAxiosRouter';
 import { RolesListPage } from './RolesListPage';
 import type { RoleRecord } from './rolesApi';
 
@@ -17,11 +18,13 @@ vi.mock('../../shared/api/axiosInstance', () => ({
 
 const mockedAxios = vi.mocked(axiosInstance);
 
-function envelope<T>(data: T) {
-  return {
-    data: { success: true, statusCode: 200, timestamp: '', path: '', data },
-  };
-}
+const ALL_ROLE_PERMISSIONS = [
+  'Roles.Create',
+  'Roles.Update',
+  'Roles.Delete',
+  'Roles.ManageUsers',
+  'Roles.ManagePermissions',
+];
 
 function buildRole(overrides: Partial<RoleRecord> = {}): RoleRecord {
   return {
@@ -55,17 +58,20 @@ function renderWithStore() {
 }
 
 describe('RolesListPage', () => {
+  let router: ReturnType<typeof routeAxios>;
+
   beforeEach(() => {
     mockedAxios.mockReset();
+    router = routeAxios(mockedAxios, {
+      'get /permissions/me': ALL_ROLE_PERMISSIONS,
+    });
   });
 
   it('lists roles returned by the API', async () => {
-    mockedAxios.mockResolvedValueOnce(
-      envelope({
-        items: [buildRole()],
-        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
-      }),
-    );
+    router.queue('get', '/roles', {
+      items: [buildRole()],
+      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
 
     renderWithStore();
 
@@ -74,9 +80,10 @@ describe('RolesListPage', () => {
   });
 
   it('shows an empty state when there are no roles', async () => {
-    mockedAxios.mockResolvedValueOnce(
-      envelope({ items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 1 } }),
-    );
+    router.queue('get', '/roles', {
+      items: [],
+      meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+    });
 
     renderWithStore();
 
@@ -84,20 +91,19 @@ describe('RolesListPage', () => {
   });
 
   it('creates a role through the form dialog', async () => {
-    mockedAxios.mockResolvedValueOnce(
-      envelope({ items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 1 } }),
-    );
+    router.queue('get', '/roles', {
+      items: [],
+      meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+    });
     const user = userEvent.setup();
     renderWithStore();
     await screen.findByText(/no roles found/i);
 
-    mockedAxios.mockResolvedValueOnce(envelope(buildRole({ id: 'new-role' })));
-    mockedAxios.mockResolvedValueOnce(
-      envelope({
-        items: [buildRole({ id: 'new-role' })],
-        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
-      }),
-    );
+    router.queue('post', '/roles', buildRole({ id: 'new-role' }));
+    router.queue('get', '/roles', {
+      items: [buildRole({ id: 'new-role' })],
+      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
 
     await user.click(screen.getByRole('button', { name: /new role/i }));
     const dialog = await screen.findByRole('dialog');
@@ -112,20 +118,19 @@ describe('RolesListPage', () => {
   });
 
   it('deletes a role after confirming the dialog', async () => {
-    mockedAxios.mockResolvedValueOnce(
-      envelope({
-        items: [buildRole()],
-        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
-      }),
-    );
+    router.queue('get', '/roles', {
+      items: [buildRole()],
+      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
     const user = userEvent.setup();
     renderWithStore();
     await screen.findByText('Employee');
 
-    mockedAxios.mockResolvedValueOnce(envelope(undefined));
-    mockedAxios.mockResolvedValueOnce(
-      envelope({ items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 1 } }),
-    );
+    router.queue('delete', '/roles/role-1', undefined);
+    router.queue('get', '/roles', {
+      items: [],
+      meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
+    });
 
     await user.click(screen.getByRole('button', { name: /delete employee/i }));
     const dialog = await screen.findByRole('dialog');
@@ -139,12 +144,10 @@ describe('RolesListPage', () => {
   });
 
   it('does not show a delete action for system roles', async () => {
-    mockedAxios.mockResolvedValueOnce(
-      envelope({
-        items: [buildRole({ isSystem: true, name: 'Admin' })],
-        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
-      }),
-    );
+    router.queue('get', '/roles', {
+      items: [buildRole({ isSystem: true, name: 'Admin' })],
+      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
 
     renderWithStore();
 

@@ -46,6 +46,16 @@ model User {
   userRoles         UserRole[] @relation("UserRoleUser")
   assignedUserRoles UserRole[] @relation("UserRoleAssignedBy")
 
+  createdPermissionGroups PermissionGroup[] @relation("PermissionGroupCreatedBy")
+  updatedPermissionGroups PermissionGroup[] @relation("PermissionGroupUpdatedBy")
+  deletedPermissionGroups PermissionGroup[] @relation("PermissionGroupDeletedBy")
+
+  createdPermissions Permission[] @relation("PermissionCreatedBy")
+  updatedPermissions Permission[] @relation("PermissionUpdatedBy")
+  deletedPermissions Permission[] @relation("PermissionDeletedBy")
+
+  assignedRolePermissions RolePermission[] @relation("RolePermissionAssignedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -69,7 +79,8 @@ model Role {
   updatedByUser User? @relation("RoleUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("RoleDeletedBy", fields: [deletedBy], references: [id])
 
-  userRoles UserRole[]
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
 
   @@index([name])
   @@map("roles")
@@ -91,6 +102,77 @@ model UserRole {
   @@index([userId])
   @@index([roleId])
   @@map("user_roles")
+}
+
+model PermissionGroup {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("PermissionGroupCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("PermissionGroupUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("PermissionGroupDeletedBy", fields: [deletedBy], references: [id])
+
+  permissions Permission[]
+
+  @@index([name])
+  @@map("permission_groups")
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  isSystem    Boolean @default(false)
+  isActive    Boolean @default(true)
+
+  groupId String?
+  group   PermissionGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("PermissionCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("PermissionUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("PermissionDeletedBy", fields: [deletedBy], references: [id])
+
+  rolePermissions RolePermission[]
+
+  @@index([name])
+  @@index([groupId])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+  assignedBy String?
+
+  assignedByUser User? @relation("RolePermissionAssignedBy", fields: [assignedBy], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
 }
 
 model Session {

@@ -4,7 +4,10 @@ import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
+import { PermissionsService } from '../src/modules/permissions/permissions.service';
+import { RolesService } from '../src/modules/roles/roles.service';
 import { UsersService } from '../src/modules/users/users.service';
+import { grantPermissions } from './helpers/grant-permissions';
 
 describe('Users (e2e)', () => {
   let app: INestApplication<App>;
@@ -38,8 +41,17 @@ describe('Users (e2e)', () => {
     await app.init();
 
     usersService = moduleFixture.get(UsersService);
+    const rolesService = moduleFixture.get(RolesService);
+    const permissionsService = moduleFixture.get(PermissionsService);
     const createdAdmin = await usersService.createUser(admin);
     adminId = createdAdmin.id;
+    await grantPermissions(
+      rolesService,
+      permissionsService,
+      adminId,
+      'Users E2E Role',
+      ['Users.View', 'Users.Create', 'Users.Update', 'Users.Delete'],
+    );
 
     const loginResponse = await request(app.getHttpServer())
       .post('/api/auth/login')

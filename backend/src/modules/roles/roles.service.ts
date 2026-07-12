@@ -6,8 +6,9 @@ import {
 } from '@nestjs/common';
 import type { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { buildPaginationMeta } from '../../common/interfaces/paginated-result.interface';
-import type { User } from '../../generated/prisma/client';
+import type { Permission, User } from '../../generated/prisma/client';
 import type { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+import { PermissionsService } from '../permissions/permissions.service';
 import { UsersService } from '../users/users.service';
 import type { CreateRoleDto } from './dto/create-role.dto';
 import type { QueryRolesDto } from './dto/query-roles.dto';
@@ -20,6 +21,7 @@ export class RolesService {
   constructor(
     private readonly rolesRepository: RolesRepository,
     private readonly usersService: UsersService,
+    private readonly permissionsService: PermissionsService,
   ) {}
 
   findByName(name: string): Promise<RoleWithUserCount | null> {
@@ -30,6 +32,17 @@ export class RolesService {
     const assignment = await this.rolesRepository.findAssignment(
       userId,
       roleId,
+    );
+    return assignment !== null;
+  }
+
+  async hasRolePermission(
+    roleId: string,
+    permissionId: string,
+  ): Promise<boolean> {
+    const assignment = await this.rolesRepository.findPermissionAssignment(
+      roleId,
+      permissionId,
     );
     return assignment !== null;
   }
@@ -170,6 +183,68 @@ export class RolesService {
     await this.getRoleOrThrow(roleId);
     const skip = (query.page - 1) * query.limit;
     const [items, total] = await this.rolesRepository.findUsersForRole(
+      roleId,
+      skip,
+      query.limit,
+    );
+    return { items, meta: buildPaginationMeta(query.page, query.limit, total) };
+  }
+
+  async assignPermission(
+    roleId: string,
+    permissionId: string,
+    assignedBy?: string,
+  ): Promise<void> {
+    const role = await this.getRoleOrThrow(roleId);
+    if (!role.isActive) {
+      throw new BadRequestException(
+        'Cannot assign permissions to an inactive role',
+      );
+    }
+    const permission =
+      await this.permissionsService.getPermissionOrThrow(permissionId);
+    if (!permission.isActive) {
+      throw new BadRequestException(
+        'Cannot assign an inactive permission to a role',
+      );
+    }
+
+    const existing = await this.rolesRepository.findPermissionAssignment(
+      roleId,
+      permissionId,
+    );
+    if (existing) {
+      throw new ConflictException('This role already has this permission');
+    }
+    await this.rolesRepository.assignPermission(
+      roleId,
+      permissionId,
+      assignedBy,
+    );
+  }
+
+  async unassignPermission(
+    roleId: string,
+    permissionId: string,
+  ): Promise<void> {
+    await this.getRoleOrThrow(roleId);
+    const existing = await this.rolesRepository.findPermissionAssignment(
+      roleId,
+      permissionId,
+    );
+    if (!existing) {
+      throw new NotFoundException('This role does not have this permission');
+    }
+    await this.rolesRepository.unassignPermission(roleId, permissionId);
+  }
+
+  async listPermissionsForRole(
+    roleId: string,
+    query: PaginationQueryDto,
+  ): Promise<PaginatedResult<Permission>> {
+    await this.getRoleOrThrow(roleId);
+    const skip = (query.page - 1) * query.limit;
+    const [items, total] = await this.rolesRepository.findPermissionsForRole(
       roleId,
       skip,
       query.limit,

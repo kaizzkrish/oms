@@ -66,6 +66,24 @@ export const router = createBrowserRouter([
               return { Component: RolesListPage };
             },
           },
+          {
+            path: 'permission-groups',
+            handle: { crumb: () => 'Permission Groups' },
+            lazy: async () => {
+              const { PermissionGroupsListPage } =
+                await import('../features/permission-groups/PermissionGroupsListPage');
+              return { Component: PermissionGroupsListPage };
+            },
+          },
+          {
+            path: 'permissions',
+            handle: { crumb: () => 'Permissions' },
+            lazy: async () => {
+              const { PermissionsListPage } =
+                await import('../features/permissions/PermissionsListPage');
+              return { Component: PermissionsListPage };
+            },
+          },
         ],
       },
     ],

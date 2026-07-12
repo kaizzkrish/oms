@@ -14,6 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtAccessPayload } from '../auth/interfaces/jwt-payload.interface';
+import { RequirePermissions } from '../permissions/decorators/require-permissions.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { QueryUsersDto } from './dto/query-users.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -27,6 +28,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @RequirePermissions('Users.Create')
   @ApiOperation({ summary: 'Create a new user' })
   async create(
     @Body() dto: CreateUserDto,
@@ -40,6 +42,7 @@ export class UsersController {
   }
 
   @Get()
+  @RequirePermissions('Users.View')
   @ApiOperation({
     summary: 'List users with pagination, search, filtering, and sorting',
   })
@@ -55,6 +58,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @RequirePermissions('Users.View')
   @ApiOperation({ summary: 'Get a user by id' })
   async findOne(@Param('id') id: string): Promise<UserEntity> {
     const user = await this.usersService.getUserOrThrow(id);
@@ -62,6 +66,7 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @RequirePermissions('Users.Update')
   @ApiOperation({ summary: 'Update a user' })
   async update(
     @Param('id') id: string,
@@ -73,6 +78,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @RequirePermissions('Users.Delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft-delete (deactivate) a user' })
   async remove(
@@ -83,6 +89,7 @@ export class UsersController {
   }
 
   @Patch(':id/restore')
+  @RequirePermissions('Users.Update')
   @ApiOperation({ summary: 'Restore a soft-deleted user' })
   async restore(
     @Param('id') id: string,

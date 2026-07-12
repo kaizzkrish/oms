@@ -15,6 +15,8 @@ import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-resp
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtAccessPayload } from '../auth/interfaces/jwt-payload.interface';
+import { RequirePermissions } from '../permissions/decorators/require-permissions.decorator';
+import { PermissionEntity } from '../permissions/entities/permission.entity';
 import { UserEntity } from '../users/entities/user.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { QueryRolesDto } from './dto/query-roles.dto';
@@ -29,6 +31,7 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Post()
+  @RequirePermissions('Roles.Create')
   @ApiOperation({ summary: 'Create a new role' })
   async create(
     @Body() dto: CreateRoleDto,
@@ -39,6 +42,7 @@ export class RolesController {
   }
 
   @Get()
+  @RequirePermissions('Roles.View')
   @ApiOperation({
     summary: 'List roles with pagination, search, filtering, and sorting',
   })
@@ -54,6 +58,7 @@ export class RolesController {
   }
 
   @Get(':id')
+  @RequirePermissions('Roles.View')
   @ApiOperation({ summary: 'Get a role by id' })
   async findOne(@Param('id') id: string): Promise<RoleEntity> {
     const role = await this.rolesService.getRoleOrThrow(id);
@@ -61,6 +66,7 @@ export class RolesController {
   }
 
   @Patch(':id')
+  @RequirePermissions('Roles.Update')
   @ApiOperation({ summary: 'Update a role' })
   async update(
     @Param('id') id: string,
@@ -72,6 +78,7 @@ export class RolesController {
   }
 
   @Delete(':id')
+  @RequirePermissions('Roles.Delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Soft-delete a role (blocked if system or assigned to users)',
@@ -84,6 +91,7 @@ export class RolesController {
   }
 
   @Patch(':id/restore')
+  @RequirePermissions('Roles.Update')
   @ApiOperation({ summary: 'Restore a soft-deleted role' })
   async restore(
     @Param('id') id: string,
@@ -94,6 +102,7 @@ export class RolesController {
   }
 
   @Get(':id/users')
+  @RequirePermissions('Roles.View')
   @ApiOperation({ summary: 'List users assigned to a role' })
   @ApiPaginatedResponse(UserEntity)
   async findUsers(
@@ -108,6 +117,7 @@ export class RolesController {
   }
 
   @Post(':id/users/:userId')
+  @RequirePermissions('Roles.ManageUsers')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Assign a role to a user' })
   async assignUser(
@@ -119,6 +129,7 @@ export class RolesController {
   }
 
   @Delete(':id/users/:userId')
+  @RequirePermissions('Roles.ManageUsers')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Unassign a role from a user' })
   async unassignUser(
@@ -126,5 +137,45 @@ export class RolesController {
     @Param('userId') userId: string,
   ): Promise<void> {
     await this.rolesService.unassignUser(id, userId);
+  }
+
+  @Get(':id/permissions')
+  @RequirePermissions('Roles.View')
+  @ApiOperation({ summary: 'List permissions assigned to a role' })
+  @ApiPaginatedResponse(PermissionEntity)
+  async findPermissions(
+    @Param('id') id: string,
+    @Query() query: PaginationQueryDto,
+  ): Promise<{ items: PermissionEntity[]; meta: unknown }> {
+    const result = await this.rolesService.listPermissionsForRole(id, query);
+    return {
+      items: result.items.map((permission) =>
+        PermissionEntity.fromPrisma(permission),
+      ),
+      meta: result.meta,
+    };
+  }
+
+  @Post(':id/permissions/:permissionId')
+  @RequirePermissions('Roles.ManagePermissions')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Assign a permission to a role' })
+  async assignPermission(
+    @Param('id') id: string,
+    @Param('permissionId') permissionId: string,
+    @CurrentUser() currentUser: JwtAccessPayload,
+  ): Promise<void> {
+    await this.rolesService.assignPermission(id, permissionId, currentUser.sub);
+  }
+
+  @Delete(':id/permissions/:permissionId')
+  @RequirePermissions('Roles.ManagePermissions')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Unassign a permission from a role' })
+  async unassignPermission(
+    @Param('id') id: string,
+    @Param('permissionId') permissionId: string,
+  ): Promise<void> {
+    await this.rolesService.unassignPermission(id, permissionId);
   }
 }

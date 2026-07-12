@@ -3,7 +3,8 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import type { User } from '../../generated/prisma/client';
+import type { Permission, User } from '../../generated/prisma/client';
+import type { PermissionsService } from '../permissions/permissions.service';
 import type { UsersService } from '../users/users.service';
 import type { QueryRolesDto } from './dto/query-roles.dto';
 import type { RoleWithUserCount } from './entities/role.entity';
@@ -49,9 +50,30 @@ function createUserFixture(overrides: Partial<User> = {}): User {
   };
 }
 
+function createPermissionFixture(
+  overrides: Partial<Permission> = {},
+): Permission {
+  return {
+    id: 'permission-1',
+    name: 'Users.View',
+    description: null,
+    isSystem: true,
+    isActive: true,
+    groupId: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    createdBy: null,
+    updatedBy: null,
+    deletedBy: null,
+    ...overrides,
+  };
+}
+
 describe('RolesService', () => {
   let rolesRepository: jest.Mocked<RolesRepository>;
   let usersService: jest.Mocked<UsersService>;
+  let permissionsService: jest.Mocked<PermissionsService>;
   let service: RolesService;
 
   beforeEach(() => {
@@ -67,13 +89,25 @@ describe('RolesService', () => {
       assignUser: jest.fn(),
       unassignUser: jest.fn(),
       findUsersForRole: jest.fn(),
+      findPermissionAssignment: jest.fn(),
+      assignPermission: jest.fn(),
+      unassignPermission: jest.fn(),
+      findPermissionsForRole: jest.fn(),
     } as unknown as jest.Mocked<RolesRepository>;
 
     usersService = {
       getUserOrThrow: jest.fn(),
     } as unknown as jest.Mocked<UsersService>;
 
-    service = new RolesService(rolesRepository, usersService);
+    permissionsService = {
+      getPermissionOrThrow: jest.fn(),
+    } as unknown as jest.Mocked<PermissionsService>;
+
+    service = new RolesService(
+      rolesRepository,
+      usersService,
+      permissionsService,
+    );
   });
 
   describe('createRole', () => {
@@ -402,6 +436,143 @@ describe('RolesService', () => {
       await expect(service.hasUserRole('user-1', 'role-1')).resolves.toBe(
         false,
       );
+    });
+  });
+
+  describe('assignPermission', () => {
+    it('assigns a permission to a role', async () => {
+      rolesRepository.findById.mockResolvedValue(createRoleFixture());
+      permissionsService.getPermissionOrThrow.mockResolvedValue(
+        createPermissionFixture(),
+      );
+      rolesRepository.findPermissionAssignment.mockResolvedValue(null);
+
+      await service.assignPermission('role-1', 'permission-1', 'admin-1');
+
+      expect(rolesRepository.assignPermission).toHaveBeenCalledWith(
+        'role-1',
+        'permission-1',
+        'admin-1',
+      );
+    });
+
+    it('prevents assigning to an inactive role', async () => {
+      rolesRepository.findById.mockResolvedValue(
+        createRoleFixture({ isActive: false }),
+      );
+
+      await expect(
+        service.assignPermission('role-1', 'permission-1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(rolesRepository.assignPermission).not.toHaveBeenCalled();
+    });
+
+    it('prevents assigning an inactive permission', async () => {
+      rolesRepository.findById.mockResolvedValue(createRoleFixture());
+      permissionsService.getPermissionOrThrow.mockResolvedValue(
+        createPermissionFixture({ isActive: false }),
+      );
+
+      await expect(
+        service.assignPermission('role-1', 'permission-1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(rolesRepository.assignPermission).not.toHaveBeenCalled();
+    });
+
+    it('throws ConflictException when the role already has the permission', async () => {
+      rolesRepository.findById.mockResolvedValue(createRoleFixture());
+      permissionsService.getPermissionOrThrow.mockResolvedValue(
+        createPermissionFixture(),
+      );
+      rolesRepository.findPermissionAssignment.mockResolvedValue({
+        id: 'rp-1',
+        roleId: 'role-1',
+        permissionId: 'permission-1',
+        assignedAt: new Date(),
+        assignedBy: null,
+      });
+
+      await expect(
+        service.assignPermission('role-1', 'permission-1'),
+      ).rejects.toThrow(ConflictException);
+      expect(rolesRepository.assignPermission).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('unassignPermission', () => {
+    it('unassigns a permission from a role', async () => {
+      rolesRepository.findById.mockResolvedValue(createRoleFixture());
+      rolesRepository.findPermissionAssignment.mockResolvedValue({
+        id: 'rp-1',
+        roleId: 'role-1',
+        permissionId: 'permission-1',
+        assignedAt: new Date(),
+        assignedBy: null,
+      });
+
+      await service.unassignPermission('role-1', 'permission-1');
+
+      expect(rolesRepository.unassignPermission).toHaveBeenCalledWith(
+        'role-1',
+        'permission-1',
+      );
+    });
+
+    it('throws NotFoundException when the role does not have the permission', async () => {
+      rolesRepository.findById.mockResolvedValue(createRoleFixture());
+      rolesRepository.findPermissionAssignment.mockResolvedValue(null);
+
+      await expect(
+        service.unassignPermission('role-1', 'permission-1'),
+      ).rejects.toThrow(NotFoundException);
+      expect(rolesRepository.unassignPermission).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('listPermissionsForRole', () => {
+    it('paginates permissions assigned to a role', async () => {
+      rolesRepository.findById.mockResolvedValue(createRoleFixture());
+      rolesRepository.findPermissionsForRole.mockResolvedValue([
+        [createPermissionFixture()],
+        1,
+      ]);
+
+      const result = await service.listPermissionsForRole('role-1', {
+        page: 1,
+        limit: 10,
+        sortOrder: 'asc',
+      });
+
+      expect(rolesRepository.findPermissionsForRole).toHaveBeenCalledWith(
+        'role-1',
+        0,
+        10,
+      );
+      expect(result.items).toHaveLength(1);
+    });
+  });
+
+  describe('hasRolePermission', () => {
+    it('returns true when an assignment exists', async () => {
+      rolesRepository.findPermissionAssignment.mockResolvedValue({
+        id: 'rp-1',
+        roleId: 'role-1',
+        permissionId: 'permission-1',
+        assignedAt: new Date(),
+        assignedBy: null,
+      });
+
+      await expect(
+        service.hasRolePermission('role-1', 'permission-1'),
+      ).resolves.toBe(true);
+    });
+
+    it('returns false when no assignment exists', async () => {
+      rolesRepository.findPermissionAssignment.mockResolvedValue(null);
+
+      await expect(
+        service.hasRolePermission('role-1', 'permission-1'),
+      ).resolves.toBe(false);
     });
   });
 });

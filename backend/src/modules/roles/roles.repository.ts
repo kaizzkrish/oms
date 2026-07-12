@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import type { User, UserRole } from '../../generated/prisma/client';
+import type {
+  Permission,
+  RolePermission,
+  User,
+  UserRole,
+} from '../../generated/prisma/client';
 import { Prisma } from '../../generated/prisma/client';
 import type { RoleSortField } from './dto/query-roles.dto';
 import type { RoleWithUserCount } from './entities/role.entity';
@@ -173,6 +178,55 @@ export class RolesRepository {
         orderBy: { firstName: 'asc' },
       }),
       this.prisma.user.count({ where }),
+    ]);
+    return [items, total];
+  }
+
+  findPermissionAssignment(
+    roleId: string,
+    permissionId: string,
+  ): Promise<RolePermission | null> {
+    return this.prisma.rolePermission.findUnique({
+      where: { roleId_permissionId: { roleId, permissionId } },
+    });
+  }
+
+  assignPermission(
+    roleId: string,
+    permissionId: string,
+    assignedBy?: string,
+  ): Promise<RolePermission> {
+    return this.prisma.rolePermission.create({
+      data: { roleId, permissionId, assignedBy },
+    });
+  }
+
+  async unassignPermission(
+    roleId: string,
+    permissionId: string,
+  ): Promise<void> {
+    await this.prisma.rolePermission.delete({
+      where: { roleId_permissionId: { roleId, permissionId } },
+    });
+  }
+
+  async findPermissionsForRole(
+    roleId: string,
+    skip: number,
+    take: number,
+  ): Promise<[Permission[], number]> {
+    const where: Prisma.PermissionWhereInput = {
+      deletedAt: null,
+      rolePermissions: { some: { roleId } },
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.permission.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { name: 'asc' },
+      }),
+      this.prisma.permission.count({ where }),
     ]);
     return [items, total];
   }

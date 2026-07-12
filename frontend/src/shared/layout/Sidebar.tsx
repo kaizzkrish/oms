@@ -9,6 +9,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { Link, useLocation } from 'react-router';
+import { useGetMyPermissionsQuery } from '../../features/permissions/permissionsApi';
 import { navItems } from './navItems';
 
 export const SIDEBAR_WIDTH = 260;
@@ -22,10 +23,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const location = useLocation();
+  const { data: permissions } = useGetMyPermissionsQuery();
+
+  const visibleItems = navItems.filter(
+    (item) => !item.permission || (permissions?.includes(item.permission) ?? false),
+  );
 
   const content = (
     <List sx={{ px: 1 }}>
-      {navItems.map((item) => (
+      {visibleItems.map((item) => (
         <ListItemButton
           key={item.path}
           component={Link}
