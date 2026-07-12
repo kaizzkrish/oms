@@ -12,6 +12,8 @@ import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { OfficesModule } from './modules/offices/offices.module';
+import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { PermissionsGuard } from './modules/permissions/guards/permissions.guard';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { RolesModule } from './modules/roles/roles.module';
@@ -52,6 +54,8 @@ import { RedisModule } from './redis/redis.module';
     AuthModule,
     PermissionsModule,
     RolesModule,
+    OrganizationsModule,
+    OfficesModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

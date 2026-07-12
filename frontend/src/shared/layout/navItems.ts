@@ -1,3 +1,5 @@
+import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import DomainOutlinedIcon from '@mui/icons-material/DomainOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
@@ -39,6 +41,18 @@ export const navItems: NavItem[] = [
     path: '/permissions',
     icon: LockOutlinedIcon,
     permission: 'Permissions.View',
+  },
+  {
+    label: 'Organizations',
+    path: '/organizations',
+    icon: DomainOutlinedIcon,
+    permission: 'Organizations.View',
+  },
+  {
+    label: 'Offices',
+    path: '/offices',
+    icon: BusinessOutlinedIcon,
+    permission: 'Offices.View',
   },
   { label: 'Profile', path: '/profile', icon: PersonOutlineOutlinedIcon },
 ];

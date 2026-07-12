@@ -84,6 +84,23 @@ export const router = createBrowserRouter([
               return { Component: PermissionsListPage };
             },
           },
+          {
+            path: 'organizations',
+            handle: { crumb: () => 'Organizations' },
+            lazy: async () => {
+              const { OrganizationsListPage } =
+                await import('../features/organizations/OrganizationsListPage');
+              return { Component: OrganizationsListPage };
+            },
+          },
+          {
+            path: 'offices',
+            handle: { crumb: () => 'Offices' },
+            lazy: async () => {
+              const { OfficesListPage } = await import('../features/offices/OfficesListPage');
+              return { Component: OfficesListPage };
+            },
+          },
         ],
       },
     ],
