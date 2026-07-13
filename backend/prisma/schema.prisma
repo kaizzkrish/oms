@@ -84,6 +84,10 @@ model User {
 
   addedTeamMembers TeamMember[] @relation("TeamMemberAddedBy")
 
+  createdClients Client[] @relation("ClientCreatedBy")
+  updatedClients Client[] @relation("ClientUpdatedBy")
+  deletedClients Client[] @relation("ClientDeletedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -232,6 +236,7 @@ model Organization {
   designations Designation[]
   employees    Employee[]
   teams        Team[]
+  clients      Client[]
 
   @@index([name])
   @@map("organizations")
@@ -379,6 +384,7 @@ model Employee {
 
   teamsLed        Team[]       @relation("TeamLeader")
   teamMemberships TeamMember[]
+  clientsManaged  Client[]     @relation("ClientAccountManager")
 
   @@unique([organizationId, employeeCode])
   @@index([organizationId])
@@ -440,6 +446,52 @@ model TeamMember {
   @@index([teamId])
   @@index([employeeId])
   @@map("team_members")
+}
+
+model Client {
+  id               String       @id @default(uuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  accountManagerId String?
+  accountManager   Employee?    @relation("ClientAccountManager", fields: [accountManagerId], references: [id], onDelete: SetNull)
+
+  name        String
+  code        String?
+  industry    String?
+  website     String?
+  email       String?
+  phone       String?
+
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  country      String?
+  postalCode   String?
+
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+
+  description String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("ClientCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("ClientUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("ClientDeletedBy", fields: [deletedBy], references: [id])
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([accountManagerId])
+  @@map("clients")
 }
 
 model Session {

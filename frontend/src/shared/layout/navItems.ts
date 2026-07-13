@@ -9,6 +9,7 @@ import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import Groups2OutlinedIcon from '@mui/icons-material/Groups2Outlined';
+import HandshakeOutlinedIcon from '@mui/icons-material/HandshakeOutlined';
 import WorkspacesOutlinedIcon from '@mui/icons-material/WorkspacesOutlined';
 import type { SvgIconComponent } from '@mui/icons-material';
 
@@ -81,6 +82,12 @@ export const navItems: NavItem[] = [
     path: '/teams',
     icon: Groups2OutlinedIcon,
     permission: 'Teams.View',
+  },
+  {
+    label: 'Clients',
+    path: '/clients',
+    icon: HandshakeOutlinedIcon,
+    permission: 'Clients.View',
   },
   { label: 'Profile', path: '/profile', icon: PersonOutlineOutlinedIcon },
 ];
