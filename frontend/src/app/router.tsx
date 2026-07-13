@@ -110,6 +110,15 @@ export const router = createBrowserRouter([
               return { Component: DepartmentsListPage };
             },
           },
+          {
+            path: 'designations',
+            handle: { crumb: () => 'Designations' },
+            lazy: async () => {
+              const { DesignationsListPage } =
+                await import('../features/designations/DesignationsListPage');
+              return { Component: DesignationsListPage };
+            },
+          },
         ],
       },
     ],

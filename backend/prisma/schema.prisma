@@ -68,6 +68,10 @@ model User {
   updatedDepartments Department[] @relation("DepartmentUpdatedBy")
   deletedDepartments Department[] @relation("DepartmentDeletedBy")
 
+  createdDesignations Designation[] @relation("DesignationCreatedBy")
+  updatedDesignations Designation[] @relation("DesignationUpdatedBy")
+  deletedDesignations Designation[] @relation("DesignationDeletedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -211,8 +215,9 @@ model Organization {
   updatedByUser User? @relation("OrganizationUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("OrganizationDeletedBy", fields: [deletedBy], references: [id])
 
-  offices     Office[]
-  departments Department[]
+  offices      Office[]
+  departments  Department[]
+  designations Designation[]
 
   @@index([name])
   @@map("organizations")
@@ -278,10 +283,42 @@ model Department {
   updatedByUser User? @relation("DepartmentUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("DepartmentDeletedBy", fields: [deletedBy], references: [id])
 
+  designations Designation[]
+
   @@unique([organizationId, name])
   @@index([organizationId])
   @@index([officeId])
   @@map("departments")
+}
+
+model Designation {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  departmentId   String?
+  department     Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  name        String
+  code        String?
+  description String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("DesignationCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("DesignationUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("DesignationDeletedBy", fields: [deletedBy], references: [id])
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([departmentId])
+  @@map("designations")
 }
 
 model Session {
