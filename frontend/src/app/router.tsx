@@ -127,6 +127,14 @@ export const router = createBrowserRouter([
               return { Component: EmployeesListPage };
             },
           },
+          {
+            path: 'teams',
+            handle: { crumb: () => 'Teams' },
+            lazy: async () => {
+              const { TeamsListPage } = await import('../features/teams/TeamsListPage');
+              return { Component: TeamsListPage };
+            },
+          },
         ],
       },
     ],

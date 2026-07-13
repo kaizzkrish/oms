@@ -78,6 +78,12 @@ model User {
   updatedEmployees Employee[] @relation("EmployeeUpdatedBy")
   deletedEmployees Employee[] @relation("EmployeeDeletedBy")
 
+  createdTeams Team[] @relation("TeamCreatedBy")
+  updatedTeams Team[] @relation("TeamUpdatedBy")
+  deletedTeams Team[] @relation("TeamDeletedBy")
+
+  addedTeamMembers TeamMember[] @relation("TeamMemberAddedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -225,6 +231,7 @@ model Organization {
   departments  Department[]
   designations Designation[]
   employees    Employee[]
+  teams        Team[]
 
   @@index([name])
   @@map("organizations")
@@ -293,6 +300,7 @@ model Department {
 
   designations Designation[]
   employees    Employee[]
+  teams        Team[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -369,6 +377,9 @@ model Employee {
   updatedByUser User? @relation("EmployeeUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("EmployeeDeletedBy", fields: [deletedBy], references: [id])
 
+  teamsLed        Team[]       @relation("TeamLeader")
+  teamMemberships TeamMember[]
+
   @@unique([organizationId, employeeCode])
   @@index([organizationId])
   @@index([departmentId])
@@ -376,6 +387,59 @@ model Employee {
   @@index([officeId])
   @@index([reportingManagerId])
   @@map("employees")
+}
+
+model Team {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  departmentId   String?
+  department     Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  teamLeaderId   String?
+  teamLeader     Employee?    @relation("TeamLeader", fields: [teamLeaderId], references: [id], onDelete: SetNull)
+
+  name        String
+  code        String?
+  description String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("TeamCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("TeamUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("TeamDeletedBy", fields: [deletedBy], references: [id])
+
+  members TeamMember[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([departmentId])
+  @@index([teamLeaderId])
+  @@map("teams")
+}
+
+model TeamMember {
+  id         String   @id @default(uuid())
+  teamId     String
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now())
+  addedBy  String?
+
+  addedByUser User? @relation("TeamMemberAddedBy", fields: [addedBy], references: [id])
+
+  @@unique([teamId, employeeId])
+  @@index([teamId])
+  @@index([employeeId])
+  @@map("team_members")
 }
 
 model Session {

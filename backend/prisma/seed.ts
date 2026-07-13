@@ -18,6 +18,7 @@ import { OrganizationsService } from '../src/modules/organizations/organizations
 import { PermissionGroupsService } from '../src/modules/permission-groups/permission-groups.service';
 import { PermissionsService } from '../src/modules/permissions/permissions.service';
 import { RolesService } from '../src/modules/roles/roles.service';
+import { TeamsService } from '../src/modules/teams/teams.service';
 import { UsersService } from '../src/modules/users/users.service';
 
 const DEFAULT_ROLES = [
@@ -54,6 +55,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Employee Management',
     description: 'Managing employee profiles',
+  },
+  {
+    name: 'Team Management',
+    description: 'Managing teams and their members',
   },
 ] as const;
 
@@ -246,6 +251,31 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore employees',
     group: 'Employee Management',
   },
+  {
+    name: 'Teams.View',
+    description: 'View teams',
+    group: 'Team Management',
+  },
+  {
+    name: 'Teams.Create',
+    description: 'Create teams',
+    group: 'Team Management',
+  },
+  {
+    name: 'Teams.Update',
+    description: 'Update teams',
+    group: 'Team Management',
+  },
+  {
+    name: 'Teams.Delete',
+    description: 'Delete or restore teams',
+    group: 'Team Management',
+  },
+  {
+    name: 'Teams.ManageMembers',
+    description: 'Add or remove members on a team',
+    group: 'Team Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -260,6 +290,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Departments.View',
   'Designations.View',
   'Employees.View',
+  'Teams.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -302,6 +333,12 @@ const SAMPLE_EMPLOYEE = {
   dateOfJoining: '2025-01-06',
 };
 
+const SAMPLE_TEAM = {
+  name: 'Engineering Team',
+  code: 'ENG-TEAM',
+  description: 'Owns the product engineering roadmap',
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -315,6 +352,7 @@ async function main(): Promise<void> {
   const departmentsService = app.get(DepartmentsService);
   const designationsService = app.get(DesignationsService);
   const employeesService = app.get(EmployeesService);
+  const teamsService = app.get(TeamsService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -574,13 +612,14 @@ async function main(): Promise<void> {
     sortBy: 'employeeCode',
     sortOrder: 'asc',
   });
-  if (existingEmployees.items.length > 0) {
+  let employee = existingEmployees.items[0];
+  if (employee) {
     Logger.log(
       `Sample employee already exists: ${SAMPLE_EMPLOYEE.employeeCode}`,
       'Seed',
     );
   } else {
-    await employeesService.createEmployee(
+    employee = await employeesService.createEmployee(
       {
         ...SAMPLE_EMPLOYEE,
         userId: employeeUser.id,
@@ -595,6 +634,40 @@ async function main(): Promise<void> {
       `Sample employee created: ${SAMPLE_EMPLOYEE.employeeCode}`,
       'Seed',
     );
+  }
+
+  const existingTeams = await teamsService.listTeams({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_TEAM.name,
+    organizationId: organization.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  let team = existingTeams.items[0];
+  if (team) {
+    Logger.log(`Sample team already exists: ${SAMPLE_TEAM.name}`, 'Seed');
+  } else {
+    team = await teamsService.createTeam(
+      {
+        ...SAMPLE_TEAM,
+        organizationId: organization.id,
+        departmentId: department.id,
+        teamLeaderId: employee.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample team created: ${SAMPLE_TEAM.name}`, 'Seed');
+  }
+
+  const isLeaderAlreadyMember = await teamsService
+    .listMembersForTeam(team.id, { page: 1, limit: 1, sortOrder: 'asc' })
+    .then((result) => result.items.some((member) => member.id === employee.id));
+  if (isLeaderAlreadyMember) {
+    Logger.log('Sample team leader is already a team member', 'Seed');
+  } else {
+    await teamsService.addMember(team.id, employee.id, adminUser?.id);
+    Logger.log('Added sample team leader as a team member', 'Seed');
   }
 
   await app.close();
