@@ -135,6 +135,14 @@ export const router = createBrowserRouter([
               return { Component: TeamsListPage };
             },
           },
+          {
+            path: 'clients',
+            handle: { crumb: () => 'Clients' },
+            lazy: async () => {
+              const { ClientsListPage } = await import('../features/clients/ClientsListPage');
+              return { Component: ClientsListPage };
+            },
+          },
         ],
       },
     ],

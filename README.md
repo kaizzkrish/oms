@@ -82,7 +82,7 @@ authentication module`) once it builds, lints, and passes tests.
 | 13 | Designations | Complete |
 | 14 | Employees | Complete |
 | 15 | Teams | Complete |
-| 16 | Clients | Pending |
+| 16 | Clients | Complete |
 | 17 | Projects | Pending |
 | 18 | Modules | Pending |
 | 19 | Features | Pending |

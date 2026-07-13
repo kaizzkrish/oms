@@ -10,6 +10,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
+import { ClientsService } from '../src/modules/clients/clients.service';
 import { DepartmentsService } from '../src/modules/departments/departments.service';
 import { DesignationsService } from '../src/modules/designations/designations.service';
 import { EmployeesService } from '../src/modules/employees/employees.service';
@@ -59,6 +60,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Team Management',
     description: 'Managing teams and their members',
+  },
+  {
+    name: 'Client Management',
+    description: 'Managing clients',
   },
 ] as const;
 
@@ -276,6 +281,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Add or remove members on a team',
     group: 'Team Management',
   },
+  {
+    name: 'Clients.View',
+    description: 'View clients',
+    group: 'Client Management',
+  },
+  {
+    name: 'Clients.Create',
+    description: 'Create clients',
+    group: 'Client Management',
+  },
+  {
+    name: 'Clients.Update',
+    description: 'Update clients',
+    group: 'Client Management',
+  },
+  {
+    name: 'Clients.Delete',
+    description: 'Delete or restore clients',
+    group: 'Client Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -291,6 +316,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Designations.View',
   'Employees.View',
   'Teams.View',
+  'Clients.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -339,6 +365,14 @@ const SAMPLE_TEAM = {
   description: 'Owns the product engineering roadmap',
 };
 
+const SAMPLE_CLIENT = {
+  name: 'Globex Corporation',
+  code: 'GLOBEX',
+  industry: 'Manufacturing',
+  contactName: 'John Smith',
+  contactEmail: 'john.smith@globex.example.com',
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -353,6 +387,7 @@ async function main(): Promise<void> {
   const designationsService = app.get(DesignationsService);
   const employeesService = app.get(EmployeesService);
   const teamsService = app.get(TeamsService);
+  const clientsService = app.get(ClientsService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -668,6 +703,28 @@ async function main(): Promise<void> {
   } else {
     await teamsService.addMember(team.id, employee.id, adminUser?.id);
     Logger.log('Added sample team leader as a team member', 'Seed');
+  }
+
+  const existingClients = await clientsService.listClients({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_CLIENT.name,
+    organizationId: organization.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingClients.items.length > 0) {
+    Logger.log(`Sample client already exists: ${SAMPLE_CLIENT.name}`, 'Seed');
+  } else {
+    await clientsService.createClient(
+      {
+        ...SAMPLE_CLIENT,
+        organizationId: organization.id,
+        accountManagerId: employee.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample client created: ${SAMPLE_CLIENT.name}`, 'Seed');
   }
 
   await app.close();
