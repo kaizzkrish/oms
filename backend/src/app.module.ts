@@ -14,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { DesignationsModule } from './modules/designations/designations.module';
+import { EmployeesModule } from './modules/employees/employees.module';
 import { OfficesModule } from './modules/offices/offices.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { PermissionsGuard } from './modules/permissions/guards/permissions.guard';
@@ -60,6 +61,7 @@ import { RedisModule } from './redis/redis.module';
     OfficesModule,
     DepartmentsModule,
     DesignationsModule,
+    EmployeesModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
