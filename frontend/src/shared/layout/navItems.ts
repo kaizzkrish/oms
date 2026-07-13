@@ -8,6 +8,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
+import Groups2OutlinedIcon from '@mui/icons-material/Groups2Outlined';
 import WorkspacesOutlinedIcon from '@mui/icons-material/WorkspacesOutlined';
 import type { SvgIconComponent } from '@mui/icons-material';
 
@@ -74,6 +75,12 @@ export const navItems: NavItem[] = [
     path: '/employees',
     icon: PeopleAltOutlinedIcon,
     permission: 'Employees.View',
+  },
+  {
+    label: 'Teams',
+    path: '/teams',
+    icon: Groups2OutlinedIcon,
+    permission: 'Teams.View',
   },
   { label: 'Profile', path: '/profile', icon: PersonOutlineOutlinedIcon },
 ];

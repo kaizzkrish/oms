@@ -81,7 +81,7 @@ authentication module`) once it builds, lints, and passes tests.
 | 12 | Departments | Complete |
 | 13 | Designations | Complete |
 | 14 | Employees | Complete |
-| 15 | Teams | Pending |
+| 15 | Teams | Complete |
 | 16 | Clients | Pending |
 | 17 | Projects | Pending |
 | 18 | Modules | Pending |
