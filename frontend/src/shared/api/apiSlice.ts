@@ -17,6 +17,7 @@ export const apiSlice = createApi({
     'Office',
     'Department',
     'Designation',
+    'Employee',
   ],
   endpoints: () => ({}),
 });

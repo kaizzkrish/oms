@@ -119,6 +119,14 @@ export const router = createBrowserRouter([
               return { Component: DesignationsListPage };
             },
           },
+          {
+            path: 'employees',
+            handle: { crumb: () => 'Employees' },
+            lazy: async () => {
+              const { EmployeesListPage } = await import('../features/employees/EmployeesListPage');
+              return { Component: EmployeesListPage };
+            },
+          },
         ],
       },
     ],

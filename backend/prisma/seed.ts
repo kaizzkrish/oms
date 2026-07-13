@@ -12,6 +12,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { DepartmentsService } from '../src/modules/departments/departments.service';
 import { DesignationsService } from '../src/modules/designations/designations.service';
+import { EmployeesService } from '../src/modules/employees/employees.service';
 import { OfficesService } from '../src/modules/offices/offices.service';
 import { OrganizationsService } from '../src/modules/organizations/organizations.service';
 import { PermissionGroupsService } from '../src/modules/permission-groups/permission-groups.service';
@@ -49,6 +50,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Designation Management',
     description: 'Managing designations',
+  },
+  {
+    name: 'Employee Management',
+    description: 'Managing employee profiles',
   },
 ] as const;
 
@@ -221,6 +226,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore designations',
     group: 'Designation Management',
   },
+  {
+    name: 'Employees.View',
+    description: 'View employees',
+    group: 'Employee Management',
+  },
+  {
+    name: 'Employees.Create',
+    description: 'Create employees',
+    group: 'Employee Management',
+  },
+  {
+    name: 'Employees.Update',
+    description: 'Update employees',
+    group: 'Employee Management',
+  },
+  {
+    name: 'Employees.Delete',
+    description: 'Delete or restore employees',
+    group: 'Employee Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -234,6 +259,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Offices.View',
   'Departments.View',
   'Designations.View',
+  'Employees.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -264,6 +290,18 @@ const SAMPLE_DESIGNATION = {
   description: 'Designs, builds, and maintains software',
 };
 
+const SAMPLE_EMPLOYEE_USER = {
+  email: 'employee@oms.local',
+  firstName: 'Jane',
+  lastName: 'Doe',
+};
+
+const SAMPLE_EMPLOYEE = {
+  employeeCode: 'EMP-0001',
+  employmentType: 'FULL_TIME' as const,
+  dateOfJoining: '2025-01-06',
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -276,6 +314,7 @@ async function main(): Promise<void> {
   const officesService = app.get(OfficesService);
   const departmentsService = app.get(DepartmentsService);
   const designationsService = app.get(DesignationsService);
+  const employeesService = app.get(EmployeesService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -475,13 +514,14 @@ async function main(): Promise<void> {
     sortBy: 'name',
     sortOrder: 'asc',
   });
-  if (existingDesignations.items.length > 0) {
+  let designation = existingDesignations.items[0];
+  if (designation) {
     Logger.log(
       `Sample designation already exists: ${SAMPLE_DESIGNATION.name}`,
       'Seed',
     );
   } else {
-    await designationsService.createDesignation(
+    designation = await designationsService.createDesignation(
       {
         ...SAMPLE_DESIGNATION,
         organizationId: organization.id,
@@ -491,6 +531,68 @@ async function main(): Promise<void> {
     );
     Logger.log(
       `Sample designation created: ${SAMPLE_DESIGNATION.name}`,
+      'Seed',
+    );
+  }
+
+  let employeeUser = await usersService.findByEmail(SAMPLE_EMPLOYEE_USER.email);
+  if (employeeUser) {
+    Logger.log(
+      `Sample employee user already exists: ${SAMPLE_EMPLOYEE_USER.email}`,
+      'Seed',
+    );
+  } else {
+    employeeUser = await usersService.createUser({
+      ...SAMPLE_EMPLOYEE_USER,
+      password,
+    });
+    Logger.log(
+      `Sample employee user created: ${SAMPLE_EMPLOYEE_USER.email}`,
+      'Seed',
+    );
+  }
+
+  const employeeRoleId = roleIdByName.get('Employee');
+  if (employeeRoleId) {
+    const alreadyAssigned = await rolesService.hasUserRole(
+      employeeUser.id,
+      employeeRoleId,
+    );
+    if (alreadyAssigned) {
+      Logger.log('Sample employee user already has the Employee role', 'Seed');
+    } else {
+      await rolesService.assignUser(employeeRoleId, employeeUser.id);
+      Logger.log('Assigned Employee role to sample employee user', 'Seed');
+    }
+  }
+
+  const existingEmployees = await employeesService.listEmployees({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_EMPLOYEE.employeeCode,
+    organizationId: organization.id,
+    sortBy: 'employeeCode',
+    sortOrder: 'asc',
+  });
+  if (existingEmployees.items.length > 0) {
+    Logger.log(
+      `Sample employee already exists: ${SAMPLE_EMPLOYEE.employeeCode}`,
+      'Seed',
+    );
+  } else {
+    await employeesService.createEmployee(
+      {
+        ...SAMPLE_EMPLOYEE,
+        userId: employeeUser.id,
+        organizationId: organization.id,
+        departmentId: department.id,
+        designationId: designation.id,
+        officeId: office.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(
+      `Sample employee created: ${SAMPLE_EMPLOYEE.employeeCode}`,
       'Seed',
     );
   }
