@@ -11,6 +11,7 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { DepartmentsService } from '../src/modules/departments/departments.service';
+import { DesignationsService } from '../src/modules/designations/designations.service';
 import { OfficesService } from '../src/modules/offices/offices.service';
 import { OrganizationsService } from '../src/modules/organizations/organizations.service';
 import { PermissionGroupsService } from '../src/modules/permission-groups/permission-groups.service';
@@ -44,6 +45,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Department Management',
     description: 'Managing departments',
+  },
+  {
+    name: 'Designation Management',
+    description: 'Managing designations',
   },
 ] as const;
 
@@ -196,6 +201,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore departments',
     group: 'Department Management',
   },
+  {
+    name: 'Designations.View',
+    description: 'View designations',
+    group: 'Designation Management',
+  },
+  {
+    name: 'Designations.Create',
+    description: 'Create designations',
+    group: 'Designation Management',
+  },
+  {
+    name: 'Designations.Update',
+    description: 'Update designations',
+    group: 'Designation Management',
+  },
+  {
+    name: 'Designations.Delete',
+    description: 'Delete or restore designations',
+    group: 'Designation Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -208,6 +233,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Organizations.View',
   'Offices.View',
   'Departments.View',
+  'Designations.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -232,6 +258,12 @@ const SAMPLE_DEPARTMENT = {
   description: 'Builds and maintains the product',
 };
 
+const SAMPLE_DESIGNATION = {
+  name: 'Software Engineer',
+  code: 'SE',
+  description: 'Designs, builds, and maintains software',
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -243,6 +275,7 @@ async function main(): Promise<void> {
   const organizationsService = app.get(OrganizationsService);
   const officesService = app.get(OfficesService);
   const departmentsService = app.get(DepartmentsService);
+  const designationsService = app.get(DesignationsService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -416,13 +449,14 @@ async function main(): Promise<void> {
     sortBy: 'name',
     sortOrder: 'asc',
   });
-  if (existingDepartments.items.length > 0) {
+  let department = existingDepartments.items[0];
+  if (department) {
     Logger.log(
       `Sample department already exists: ${SAMPLE_DEPARTMENT.name}`,
       'Seed',
     );
   } else {
-    await departmentsService.createDepartment(
+    department = await departmentsService.createDepartment(
       {
         ...SAMPLE_DEPARTMENT,
         organizationId: organization.id,
@@ -433,11 +467,38 @@ async function main(): Promise<void> {
     Logger.log(`Sample department created: ${SAMPLE_DEPARTMENT.name}`, 'Seed');
   }
 
+  const existingDesignations = await designationsService.listDesignations({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_DESIGNATION.name,
+    organizationId: organization.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingDesignations.items.length > 0) {
+    Logger.log(
+      `Sample designation already exists: ${SAMPLE_DESIGNATION.name}`,
+      'Seed',
+    );
+  } else {
+    await designationsService.createDesignation(
+      {
+        ...SAMPLE_DESIGNATION,
+        organizationId: organization.id,
+        departmentId: department.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(
+      `Sample designation created: ${SAMPLE_DESIGNATION.name}`,
+      'Seed',
+    );
+  }
+
   await app.close();
 }
 
 main().catch((error: unknown) => {
-  // eslint-disable-next-line no-console -- seed script runs outside Nest's logger context on failure
   console.error(error);
   process.exit(1);
 });

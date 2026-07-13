@@ -1,4 +1,5 @@
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 import DomainOutlinedIcon from '@mui/icons-material/DomainOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
@@ -60,6 +61,12 @@ export const navItems: NavItem[] = [
     path: '/departments',
     icon: AccountTreeOutlinedIcon,
     permission: 'Departments.View',
+  },
+  {
+    label: 'Designations',
+    path: '/designations',
+    icon: BadgeOutlinedIcon,
+    permission: 'Designations.View',
   },
   { label: 'Profile', path: '/profile', icon: PersonOutlineOutlinedIcon },
 ];
