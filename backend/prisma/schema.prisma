@@ -96,6 +96,10 @@ model User {
   updatedProjectModules ProjectModule[] @relation("ProjectModuleUpdatedBy")
   deletedProjectModules ProjectModule[] @relation("ProjectModuleDeletedBy")
 
+  createdFeatures Feature[] @relation("FeatureCreatedBy")
+  updatedFeatures Feature[] @relation("FeatureUpdatedBy")
+  deletedFeatures Feature[] @relation("FeatureDeletedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -247,6 +251,7 @@ model Organization {
   clients        Client[]
   projects       Project[]
   projectModules ProjectModule[]
+  features       Feature[]
 
   @@index([name])
   @@map("organizations")
@@ -398,6 +403,7 @@ model Employee {
   clientsManaged  Client[]        @relation("ClientAccountManager")
   projectsManaged Project[]       @relation("ProjectManager")
   modulesLed      ProjectModule[] @relation("ProjectModuleLead")
+  featuresOwned   Feature[]       @relation("FeatureOwner")
 
   @@unique([organizationId, employeeCode])
   @@index([organizationId])
@@ -547,7 +553,8 @@ model Project {
   updatedByUser User? @relation("ProjectUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("ProjectDeletedBy", fields: [deletedBy], references: [id])
 
-  modules ProjectModule[]
+  modules  ProjectModule[]
+  features Feature[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -589,11 +596,55 @@ model ProjectModule {
   updatedByUser User? @relation("ProjectModuleUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("ProjectModuleDeletedBy", fields: [deletedBy], references: [id])
 
+  features Feature[]
+
   @@unique([projectId, name])
   @@index([organizationId])
   @@index([projectId])
   @@index([moduleLeadId])
   @@map("project_modules")
+}
+
+model Feature {
+  id             String        @id @default(uuid())
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  moduleId       String
+  module         ProjectModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  ownerId        String?
+  owner          Employee?     @relation("FeatureOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  name        String
+  code        String?
+  description String?
+  status      String  @default("PLANNING")
+  priority    String  @default("MEDIUM")
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("FeatureCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("FeatureUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("FeatureDeletedBy", fields: [deletedBy], references: [id])
+
+  @@unique([moduleId, name])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([moduleId])
+  @@index([ownerId])
+  @@map("features")
 }
 
 model Session {

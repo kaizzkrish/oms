@@ -85,7 +85,7 @@ authentication module`) once it builds, lints, and passes tests.
 | 16 | Clients | Complete |
 | 17 | Projects | Complete |
 | 18 | Modules | Complete |
-| 19 | Features | Pending |
+| 19 | Features | Complete |
 | 20 | Milestones | Pending |
 | 21 | Sprints | Pending |
 | 22 | Tasks | Pending |

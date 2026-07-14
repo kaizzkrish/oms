@@ -14,6 +14,7 @@ import { ClientsService } from '../src/modules/clients/clients.service';
 import { DepartmentsService } from '../src/modules/departments/departments.service';
 import { DesignationsService } from '../src/modules/designations/designations.service';
 import { EmployeesService } from '../src/modules/employees/employees.service';
+import { FeaturesService } from '../src/modules/features/features.service';
 import { OfficesService } from '../src/modules/offices/offices.service';
 import { OrganizationsService } from '../src/modules/organizations/organizations.service';
 import { PermissionGroupsService } from '../src/modules/permission-groups/permission-groups.service';
@@ -74,6 +75,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Module Management',
     description: 'Managing project modules',
+  },
+  {
+    name: 'Feature Management',
+    description: 'Managing features',
   },
 ] as const;
 
@@ -351,6 +356,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore project modules',
     group: 'Module Management',
   },
+  {
+    name: 'Features.View',
+    description: 'View features',
+    group: 'Feature Management',
+  },
+  {
+    name: 'Features.Create',
+    description: 'Create features',
+    group: 'Feature Management',
+  },
+  {
+    name: 'Features.Update',
+    description: 'Update features',
+    group: 'Feature Management',
+  },
+  {
+    name: 'Features.Delete',
+    description: 'Delete or restore features',
+    group: 'Feature Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -369,6 +394,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Clients.View',
   'Projects.View',
   'ProjectModules.View',
+  'Features.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -445,6 +471,16 @@ const SAMPLE_MODULE = {
   endDate: '2026-03-31',
 };
 
+const SAMPLE_FEATURE = {
+  name: 'Hero Banner Redesign',
+  code: 'HERO',
+  description: 'New hero banner with updated messaging and imagery',
+  status: 'IN_PROGRESS' as const,
+  priority: 'HIGH' as const,
+  startDate: '2026-01-13',
+  endDate: '2026-02-14',
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -462,6 +498,7 @@ async function main(): Promise<void> {
   const clientsService = app.get(ClientsService);
   const projectsService = app.get(ProjectsService);
   const projectModulesService = app.get(ProjectModulesService);
+  const featuresService = app.get(FeaturesService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -836,10 +873,11 @@ async function main(): Promise<void> {
     sortBy: 'name',
     sortOrder: 'asc',
   });
-  if (existingModules.items.length > 0) {
+  let projectModule = existingModules.items[0];
+  if (projectModule) {
     Logger.log(`Sample module already exists: ${SAMPLE_MODULE.name}`, 'Seed');
   } else {
-    await projectModulesService.createProjectModule(
+    projectModule = await projectModulesService.createProjectModule(
       {
         ...SAMPLE_MODULE,
         organizationId: organization.id,
@@ -849,6 +887,30 @@ async function main(): Promise<void> {
       adminUser?.id,
     );
     Logger.log(`Sample module created: ${SAMPLE_MODULE.name}`, 'Seed');
+  }
+
+  const existingFeatures = await featuresService.listFeatures({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_FEATURE.name,
+    moduleId: projectModule.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingFeatures.items.length > 0) {
+    Logger.log(`Sample feature already exists: ${SAMPLE_FEATURE.name}`, 'Seed');
+  } else {
+    await featuresService.createFeature(
+      {
+        ...SAMPLE_FEATURE,
+        organizationId: organization.id,
+        projectId: project.id,
+        moduleId: projectModule.id,
+        ownerId: employee.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample feature created: ${SAMPLE_FEATURE.name}`, 'Seed');
   }
 
   await app.close();
