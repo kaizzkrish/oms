@@ -88,6 +88,10 @@ model User {
   updatedClients Client[] @relation("ClientUpdatedBy")
   deletedClients Client[] @relation("ClientDeletedBy")
 
+  createdProjects Project[] @relation("ProjectCreatedBy")
+  updatedProjects Project[] @relation("ProjectUpdatedBy")
+  deletedProjects Project[] @relation("ProjectDeletedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -237,6 +241,7 @@ model Organization {
   employees    Employee[]
   teams        Team[]
   clients      Client[]
+  projects     Project[]
 
   @@index([name])
   @@map("organizations")
@@ -306,6 +311,7 @@ model Department {
   designations Designation[]
   employees    Employee[]
   teams        Team[]
+  projects     Project[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -385,6 +391,7 @@ model Employee {
   teamsLed        Team[]       @relation("TeamLeader")
   teamMemberships TeamMember[]
   clientsManaged  Client[]     @relation("ClientAccountManager")
+  projectsManaged Project[]    @relation("ProjectManager")
 
   @@unique([organizationId, employeeCode])
   @@index([organizationId])
@@ -421,7 +428,8 @@ model Team {
   updatedByUser User? @relation("TeamUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("TeamDeletedBy", fields: [deletedBy], references: [id])
 
-  members TeamMember[]
+  members  TeamMember[]
+  projects Project[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -488,10 +496,58 @@ model Client {
   updatedByUser User? @relation("ClientUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("ClientDeletedBy", fields: [deletedBy], references: [id])
 
+  projects Project[]
+
   @@unique([organizationId, name])
   @@index([organizationId])
   @@index([accountManagerId])
   @@map("clients")
+}
+
+model Project {
+  id                String       @id @default(uuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId          String?
+  client            Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  departmentId      String?
+  department        Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  projectManagerId  String?
+  projectManager    Employee?    @relation("ProjectManager", fields: [projectManagerId], references: [id], onDelete: SetNull)
+  teamId            String?
+  team              Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  name        String
+  code        String?
+  description String?
+  status      String  @default("PLANNING")
+  priority    String  @default("MEDIUM")
+
+  startDate DateTime?
+  endDate   DateTime?
+  budget    Decimal?  @db.Decimal(14, 2)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("ProjectCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("ProjectUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("ProjectDeletedBy", fields: [deletedBy], references: [id])
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([departmentId])
+  @@index([projectManagerId])
+  @@index([teamId])
+  @@map("projects")
 }
 
 model Session {

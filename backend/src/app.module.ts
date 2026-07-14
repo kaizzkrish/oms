@@ -20,6 +20,7 @@ import { OfficesModule } from './modules/offices/offices.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { PermissionsGuard } from './modules/permissions/guards/permissions.guard';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { ProjectsModule } from './modules/projects/projects.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -66,6 +67,7 @@ import { RedisModule } from './redis/redis.module';
     EmployeesModule,
     TeamsModule,
     ClientsModule,
+    ProjectsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
