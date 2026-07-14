@@ -15,6 +15,7 @@ import { DepartmentsService } from '../src/modules/departments/departments.servi
 import { DesignationsService } from '../src/modules/designations/designations.service';
 import { EmployeesService } from '../src/modules/employees/employees.service';
 import { FeaturesService } from '../src/modules/features/features.service';
+import { MilestonesService } from '../src/modules/milestones/milestones.service';
 import { OfficesService } from '../src/modules/offices/offices.service';
 import { OrganizationsService } from '../src/modules/organizations/organizations.service';
 import { PermissionGroupsService } from '../src/modules/permission-groups/permission-groups.service';
@@ -79,6 +80,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Feature Management',
     description: 'Managing features',
+  },
+  {
+    name: 'Milestone Management',
+    description: 'Managing project milestones',
   },
 ] as const;
 
@@ -376,6 +381,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore features',
     group: 'Feature Management',
   },
+  {
+    name: 'Milestones.View',
+    description: 'View milestones',
+    group: 'Milestone Management',
+  },
+  {
+    name: 'Milestones.Create',
+    description: 'Create milestones',
+    group: 'Milestone Management',
+  },
+  {
+    name: 'Milestones.Update',
+    description: 'Update milestones',
+    group: 'Milestone Management',
+  },
+  {
+    name: 'Milestones.Delete',
+    description: 'Delete or restore milestones',
+    group: 'Milestone Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -395,6 +420,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Projects.View',
   'ProjectModules.View',
   'Features.View',
+  'Milestones.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -481,6 +507,14 @@ const SAMPLE_FEATURE = {
   endDate: '2026-02-14',
 };
 
+const SAMPLE_MILESTONE = {
+  name: 'Beta Launch',
+  code: 'BETA',
+  description: 'Public beta release of the redesigned website',
+  status: 'AT_RISK' as const,
+  dueDate: '2026-04-30',
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -499,6 +533,7 @@ async function main(): Promise<void> {
   const projectsService = app.get(ProjectsService);
   const projectModulesService = app.get(ProjectModulesService);
   const featuresService = app.get(FeaturesService);
+  const milestonesService = app.get(MilestonesService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -911,6 +946,32 @@ async function main(): Promise<void> {
       adminUser?.id,
     );
     Logger.log(`Sample feature created: ${SAMPLE_FEATURE.name}`, 'Seed');
+  }
+
+  const existingMilestones = await milestonesService.listMilestones({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_MILESTONE.name,
+    projectId: project.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingMilestones.items.length > 0) {
+    Logger.log(
+      `Sample milestone already exists: ${SAMPLE_MILESTONE.name}`,
+      'Seed',
+    );
+  } else {
+    await milestonesService.createMilestone(
+      {
+        ...SAMPLE_MILESTONE,
+        organizationId: organization.id,
+        projectId: project.id,
+        ownerId: employee.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample milestone created: ${SAMPLE_MILESTONE.name}`, 'Seed');
   }
 
   await app.close();
