@@ -84,7 +84,7 @@ authentication module`) once it builds, lints, and passes tests.
 | 15 | Teams | Complete |
 | 16 | Clients | Complete |
 | 17 | Projects | Complete |
-| 18 | Modules | Pending |
+| 18 | Modules | Complete |
 | 19 | Features | Pending |
 | 20 | Milestones | Pending |
 | 21 | Sprints | Pending |

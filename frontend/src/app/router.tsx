@@ -151,6 +151,15 @@ export const router = createBrowserRouter([
               return { Component: ProjectsListPage };
             },
           },
+          {
+            path: 'project-modules',
+            handle: { crumb: () => 'Modules' },
+            lazy: async () => {
+              const { ProjectModulesListPage } =
+                await import('../features/project-modules/ProjectModulesListPage');
+              return { Component: ProjectModulesListPage };
+            },
+          },
         ],
       },
     ],

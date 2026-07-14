@@ -12,6 +12,7 @@ import Groups2OutlinedIcon from '@mui/icons-material/Groups2Outlined';
 import HandshakeOutlinedIcon from '@mui/icons-material/HandshakeOutlined';
 import WorkspacesOutlinedIcon from '@mui/icons-material/WorkspacesOutlined';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import ViewModuleOutlinedIcon from '@mui/icons-material/ViewModuleOutlined';
 import type { SvgIconComponent } from '@mui/icons-material';
 
 export interface NavItem {
@@ -95,6 +96,12 @@ export const navItems: NavItem[] = [
     path: '/projects',
     icon: AssignmentOutlinedIcon,
     permission: 'Projects.View',
+  },
+  {
+    label: 'Modules',
+    path: '/project-modules',
+    icon: ViewModuleOutlinedIcon,
+    permission: 'ProjectModules.View',
   },
   { label: 'Profile', path: '/profile', icon: PersonOutlineOutlinedIcon },
 ];
