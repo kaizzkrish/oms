@@ -18,6 +18,7 @@ import { OfficesService } from '../src/modules/offices/offices.service';
 import { OrganizationsService } from '../src/modules/organizations/organizations.service';
 import { PermissionGroupsService } from '../src/modules/permission-groups/permission-groups.service';
 import { PermissionsService } from '../src/modules/permissions/permissions.service';
+import { ProjectModulesService } from '../src/modules/project-modules/project-modules.service';
 import { ProjectsService } from '../src/modules/projects/projects.service';
 import { RolesService } from '../src/modules/roles/roles.service';
 import { TeamsService } from '../src/modules/teams/teams.service';
@@ -69,6 +70,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Project Management',
     description: 'Managing projects',
+  },
+  {
+    name: 'Module Management',
+    description: 'Managing project modules',
   },
 ] as const;
 
@@ -326,6 +331,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore projects',
     group: 'Project Management',
   },
+  {
+    name: 'ProjectModules.View',
+    description: 'View project modules',
+    group: 'Module Management',
+  },
+  {
+    name: 'ProjectModules.Create',
+    description: 'Create project modules',
+    group: 'Module Management',
+  },
+  {
+    name: 'ProjectModules.Update',
+    description: 'Update project modules',
+    group: 'Module Management',
+  },
+  {
+    name: 'ProjectModules.Delete',
+    description: 'Delete or restore project modules',
+    group: 'Module Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -343,6 +368,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Teams.View',
   'Clients.View',
   'Projects.View',
+  'ProjectModules.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -410,6 +436,15 @@ const SAMPLE_PROJECT = {
   budget: 50000,
 };
 
+const SAMPLE_MODULE = {
+  name: 'Homepage Revamp',
+  code: 'HOME',
+  description: 'Redesign the homepage hero, navigation, and footer',
+  status: 'IN_PROGRESS' as const,
+  startDate: '2026-01-13',
+  endDate: '2026-03-31',
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -426,6 +461,7 @@ async function main(): Promise<void> {
   const teamsService = app.get(TeamsService);
   const clientsService = app.get(ClientsService);
   const projectsService = app.get(ProjectsService);
+  const projectModulesService = app.get(ProjectModulesService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -774,10 +810,11 @@ async function main(): Promise<void> {
     sortBy: 'name',
     sortOrder: 'asc',
   });
-  if (existingProjects.items.length > 0) {
+  let project = existingProjects.items[0];
+  if (project) {
     Logger.log(`Sample project already exists: ${SAMPLE_PROJECT.name}`, 'Seed');
   } else {
-    await projectsService.createProject(
+    project = await projectsService.createProject(
       {
         ...SAMPLE_PROJECT,
         organizationId: organization.id,
@@ -789,6 +826,29 @@ async function main(): Promise<void> {
       adminUser?.id,
     );
     Logger.log(`Sample project created: ${SAMPLE_PROJECT.name}`, 'Seed');
+  }
+
+  const existingModules = await projectModulesService.listProjectModules({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_MODULE.name,
+    projectId: project.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingModules.items.length > 0) {
+    Logger.log(`Sample module already exists: ${SAMPLE_MODULE.name}`, 'Seed');
+  } else {
+    await projectModulesService.createProjectModule(
+      {
+        ...SAMPLE_MODULE,
+        organizationId: organization.id,
+        projectId: project.id,
+        moduleLeadId: employee.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample module created: ${SAMPLE_MODULE.name}`, 'Seed');
   }
 
   await app.close();

@@ -92,6 +92,10 @@ model User {
   updatedProjects Project[] @relation("ProjectUpdatedBy")
   deletedProjects Project[] @relation("ProjectDeletedBy")
 
+  createdProjectModules ProjectModule[] @relation("ProjectModuleCreatedBy")
+  updatedProjectModules ProjectModule[] @relation("ProjectModuleUpdatedBy")
+  deletedProjectModules ProjectModule[] @relation("ProjectModuleDeletedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -240,8 +244,9 @@ model Organization {
   designations Designation[]
   employees    Employee[]
   teams        Team[]
-  clients      Client[]
-  projects     Project[]
+  clients        Client[]
+  projects       Project[]
+  projectModules ProjectModule[]
 
   @@index([name])
   @@map("organizations")
@@ -388,10 +393,11 @@ model Employee {
   updatedByUser User? @relation("EmployeeUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("EmployeeDeletedBy", fields: [deletedBy], references: [id])
 
-  teamsLed        Team[]       @relation("TeamLeader")
+  teamsLed        Team[]          @relation("TeamLeader")
   teamMemberships TeamMember[]
-  clientsManaged  Client[]     @relation("ClientAccountManager")
-  projectsManaged Project[]    @relation("ProjectManager")
+  clientsManaged  Client[]        @relation("ClientAccountManager")
+  projectsManaged Project[]       @relation("ProjectManager")
+  modulesLed      ProjectModule[] @relation("ProjectModuleLead")
 
   @@unique([organizationId, employeeCode])
   @@index([organizationId])
@@ -541,6 +547,8 @@ model Project {
   updatedByUser User? @relation("ProjectUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("ProjectDeletedBy", fields: [deletedBy], references: [id])
 
+  modules ProjectModule[]
+
   @@unique([organizationId, name])
   @@index([organizationId])
   @@index([clientId])
@@ -548,6 +556,44 @@ model Project {
   @@index([projectManagerId])
   @@index([teamId])
   @@map("projects")
+}
+
+model ProjectModule {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  moduleLeadId   String?
+  moduleLead     Employee?    @relation("ProjectModuleLead", fields: [moduleLeadId], references: [id], onDelete: SetNull)
+
+  name        String
+  code        String?
+  description String?
+  status      String  @default("PLANNING")
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("ProjectModuleCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("ProjectModuleUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("ProjectModuleDeletedBy", fields: [deletedBy], references: [id])
+
+  @@unique([projectId, name])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([moduleLeadId])
+  @@map("project_modules")
 }
 
 model Session {

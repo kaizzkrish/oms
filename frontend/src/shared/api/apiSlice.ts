@@ -22,6 +22,7 @@ export const apiSlice = createApi({
     'TeamMembers',
     'Client',
     'Project',
+    'ProjectModule',
   ],
   endpoints: () => ({}),
 });
