@@ -18,6 +18,7 @@ import { OfficesService } from '../src/modules/offices/offices.service';
 import { OrganizationsService } from '../src/modules/organizations/organizations.service';
 import { PermissionGroupsService } from '../src/modules/permission-groups/permission-groups.service';
 import { PermissionsService } from '../src/modules/permissions/permissions.service';
+import { ProjectsService } from '../src/modules/projects/projects.service';
 import { RolesService } from '../src/modules/roles/roles.service';
 import { TeamsService } from '../src/modules/teams/teams.service';
 import { UsersService } from '../src/modules/users/users.service';
@@ -64,6 +65,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Client Management',
     description: 'Managing clients',
+  },
+  {
+    name: 'Project Management',
+    description: 'Managing projects',
   },
 ] as const;
 
@@ -301,6 +306,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore clients',
     group: 'Client Management',
   },
+  {
+    name: 'Projects.View',
+    description: 'View projects',
+    group: 'Project Management',
+  },
+  {
+    name: 'Projects.Create',
+    description: 'Create projects',
+    group: 'Project Management',
+  },
+  {
+    name: 'Projects.Update',
+    description: 'Update projects',
+    group: 'Project Management',
+  },
+  {
+    name: 'Projects.Delete',
+    description: 'Delete or restore projects',
+    group: 'Project Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -317,6 +342,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Employees.View',
   'Teams.View',
   'Clients.View',
+  'Projects.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -373,6 +399,17 @@ const SAMPLE_CLIENT = {
   contactEmail: 'john.smith@globex.example.com',
 };
 
+const SAMPLE_PROJECT = {
+  name: 'Website Redesign',
+  code: 'WEB-RD',
+  description: "Refresh Globex's public-facing marketing site",
+  status: 'IN_PROGRESS' as const,
+  priority: 'HIGH' as const,
+  startDate: '2026-01-13',
+  endDate: '2026-06-30',
+  budget: 50000,
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -388,6 +425,7 @@ async function main(): Promise<void> {
   const employeesService = app.get(EmployeesService);
   const teamsService = app.get(TeamsService);
   const clientsService = app.get(ClientsService);
+  const projectsService = app.get(ProjectsService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -713,10 +751,11 @@ async function main(): Promise<void> {
     sortBy: 'name',
     sortOrder: 'asc',
   });
-  if (existingClients.items.length > 0) {
+  let client = existingClients.items[0];
+  if (client) {
     Logger.log(`Sample client already exists: ${SAMPLE_CLIENT.name}`, 'Seed');
   } else {
-    await clientsService.createClient(
+    client = await clientsService.createClient(
       {
         ...SAMPLE_CLIENT,
         organizationId: organization.id,
@@ -725,6 +764,31 @@ async function main(): Promise<void> {
       adminUser?.id,
     );
     Logger.log(`Sample client created: ${SAMPLE_CLIENT.name}`, 'Seed');
+  }
+
+  const existingProjects = await projectsService.listProjects({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_PROJECT.name,
+    organizationId: organization.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingProjects.items.length > 0) {
+    Logger.log(`Sample project already exists: ${SAMPLE_PROJECT.name}`, 'Seed');
+  } else {
+    await projectsService.createProject(
+      {
+        ...SAMPLE_PROJECT,
+        organizationId: organization.id,
+        clientId: client.id,
+        departmentId: department.id,
+        projectManagerId: employee.id,
+        teamId: team.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample project created: ${SAMPLE_PROJECT.name}`, 'Seed');
   }
 
   await app.close();
