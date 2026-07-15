@@ -14,6 +14,7 @@ import WorkspacesOutlinedIcon from '@mui/icons-material/WorkspacesOutlined';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import ViewModuleOutlinedIcon from '@mui/icons-material/ViewModuleOutlined';
 import ExtensionOutlinedIcon from '@mui/icons-material/ExtensionOutlined';
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import type { SvgIconComponent } from '@mui/icons-material';
 
 export interface NavItem {
@@ -109,6 +110,12 @@ export const navItems: NavItem[] = [
     path: '/features',
     icon: ExtensionOutlinedIcon,
     permission: 'Features.View',
+  },
+  {
+    label: 'Milestones',
+    path: '/milestones',
+    icon: FlagOutlinedIcon,
+    permission: 'Milestones.View',
   },
   { label: 'Profile', path: '/profile', icon: PersonOutlineOutlinedIcon },
 ];

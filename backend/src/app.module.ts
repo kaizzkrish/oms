@@ -17,6 +17,7 @@ import { DepartmentsModule } from './modules/departments/departments.module';
 import { DesignationsModule } from './modules/designations/designations.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { FeaturesModule } from './modules/features/features.module';
+import { MilestonesModule } from './modules/milestones/milestones.module';
 import { OfficesModule } from './modules/offices/offices.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { PermissionsGuard } from './modules/permissions/guards/permissions.guard';
@@ -72,6 +73,7 @@ import { RedisModule } from './redis/redis.module';
     ProjectsModule,
     ProjectModulesModule,
     FeaturesModule,
+    MilestonesModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

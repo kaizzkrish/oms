@@ -100,6 +100,10 @@ model User {
   updatedFeatures Feature[] @relation("FeatureUpdatedBy")
   deletedFeatures Feature[] @relation("FeatureDeletedBy")
 
+  createdMilestones Milestone[] @relation("MilestoneCreatedBy")
+  updatedMilestones Milestone[] @relation("MilestoneUpdatedBy")
+  deletedMilestones Milestone[] @relation("MilestoneDeletedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -252,6 +256,7 @@ model Organization {
   projects       Project[]
   projectModules ProjectModule[]
   features       Feature[]
+  milestones     Milestone[]
 
   @@index([name])
   @@map("organizations")
@@ -398,12 +403,13 @@ model Employee {
   updatedByUser User? @relation("EmployeeUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("EmployeeDeletedBy", fields: [deletedBy], references: [id])
 
-  teamsLed        Team[]          @relation("TeamLeader")
-  teamMemberships TeamMember[]
-  clientsManaged  Client[]        @relation("ClientAccountManager")
-  projectsManaged Project[]       @relation("ProjectManager")
-  modulesLed      ProjectModule[] @relation("ProjectModuleLead")
-  featuresOwned   Feature[]       @relation("FeatureOwner")
+  teamsLed         Team[]          @relation("TeamLeader")
+  teamMemberships  TeamMember[]
+  clientsManaged   Client[]        @relation("ClientAccountManager")
+  projectsManaged  Project[]       @relation("ProjectManager")
+  modulesLed       ProjectModule[] @relation("ProjectModuleLead")
+  featuresOwned    Feature[]       @relation("FeatureOwner")
+  milestonesOwned  Milestone[]     @relation("MilestoneOwner")
 
   @@unique([organizationId, employeeCode])
   @@index([organizationId])
@@ -553,8 +559,9 @@ model Project {
   updatedByUser User? @relation("ProjectUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("ProjectDeletedBy", fields: [deletedBy], references: [id])
 
-  modules  ProjectModule[]
-  features Feature[]
+  modules    ProjectModule[]
+  features   Feature[]
+  milestones Milestone[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -645,6 +652,44 @@ model Feature {
   @@index([moduleId])
   @@index([ownerId])
   @@map("features")
+}
+
+model Milestone {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ownerId        String?
+  owner          Employee?    @relation("MilestoneOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  name        String
+  code        String?
+  description String?
+  status      String @default("PENDING")
+
+  dueDate      DateTime
+  achievedDate DateTime?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("MilestoneCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("MilestoneUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("MilestoneDeletedBy", fields: [deletedBy], references: [id])
+
+  @@unique([projectId, name])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([ownerId])
+  @@map("milestones")
 }
 
 model Session {

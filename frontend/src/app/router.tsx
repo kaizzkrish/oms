@@ -168,6 +168,15 @@ export const router = createBrowserRouter([
               return { Component: FeaturesListPage };
             },
           },
+          {
+            path: 'milestones',
+            handle: { crumb: () => 'Milestones' },
+            lazy: async () => {
+              const { MilestonesListPage } =
+                await import('../features/milestones/MilestonesListPage');
+              return { Component: MilestonesListPage };
+            },
+          },
         ],
       },
     ],
