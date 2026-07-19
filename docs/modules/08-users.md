@@ -125,4 +125,4 @@ the same underlying fix, verified from two different angles).
   switched the Status filter to Inactive (confirmed it reappeared with a
   Restore action — this is what surfaced bug #1 above), restored it, and
   confirmed the network log showed only 200/201/204 responses with no
-  console errors throughout. 
+  console errors throughout.
