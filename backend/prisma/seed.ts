@@ -11,6 +11,7 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { ClientsService } from '../src/modules/clients/clients.service';
+import { DeliverablesService } from '../src/modules/deliverables/deliverables.service';
 import { DepartmentsService } from '../src/modules/departments/departments.service';
 import { DesignationsService } from '../src/modules/designations/designations.service';
 import { EmployeesService } from '../src/modules/employees/employees.service';
@@ -94,6 +95,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Task Management',
     description: 'Managing tasks',
+  },
+  {
+    name: 'Deliverable Management',
+    description: 'Managing project deliverables',
   },
 ] as const;
 
@@ -451,6 +456,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore tasks',
     group: 'Task Management',
   },
+  {
+    name: 'Deliverables.View',
+    description: 'View deliverables',
+    group: 'Deliverable Management',
+  },
+  {
+    name: 'Deliverables.Create',
+    description: 'Create deliverables',
+    group: 'Deliverable Management',
+  },
+  {
+    name: 'Deliverables.Update',
+    description: 'Update deliverables',
+    group: 'Deliverable Management',
+  },
+  {
+    name: 'Deliverables.Delete',
+    description: 'Delete or restore deliverables',
+    group: 'Deliverable Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -473,6 +498,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Milestones.View',
   'Sprints.View',
   'Tasks.View',
+  'Deliverables.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -588,6 +614,15 @@ const SAMPLE_TASK = {
   estimatedHours: 12,
 };
 
+const SAMPLE_DELIVERABLE = {
+  name: 'Beta Launch Readiness Report',
+  code: 'BETA-RPT',
+  description: 'Summary report confirming the site is ready for public beta',
+  type: 'REPORT' as const,
+  status: 'IN_PROGRESS' as const,
+  dueDate: '2026-04-23',
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -609,6 +644,7 @@ async function main(): Promise<void> {
   const milestonesService = app.get(MilestonesService);
   const sprintsService = app.get(SprintsService);
   const tasksService = app.get(TasksService);
+  const deliverablesService = app.get(DeliverablesService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -1032,13 +1068,14 @@ async function main(): Promise<void> {
     sortBy: 'name',
     sortOrder: 'asc',
   });
-  if (existingMilestones.items.length > 0) {
+  let milestone = existingMilestones.items[0];
+  if (milestone) {
     Logger.log(
       `Sample milestone already exists: ${SAMPLE_MILESTONE.name}`,
       'Seed',
     );
   } else {
-    await milestonesService.createMilestone(
+    milestone = await milestonesService.createMilestone(
       {
         ...SAMPLE_MILESTONE,
         organizationId: organization.id,
@@ -1099,6 +1136,36 @@ async function main(): Promise<void> {
       adminUser?.id,
     );
     Logger.log(`Sample task created: ${SAMPLE_TASK.name}`, 'Seed');
+  }
+
+  const existingDeliverables = await deliverablesService.listDeliverables({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_DELIVERABLE.name,
+    projectId: project.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingDeliverables.items.length > 0) {
+    Logger.log(
+      `Sample deliverable already exists: ${SAMPLE_DELIVERABLE.name}`,
+      'Seed',
+    );
+  } else {
+    await deliverablesService.createDeliverable(
+      {
+        ...SAMPLE_DELIVERABLE,
+        organizationId: organization.id,
+        projectId: project.id,
+        milestoneId: milestone.id,
+        ownerId: employee.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(
+      `Sample deliverable created: ${SAMPLE_DELIVERABLE.name}`,
+      'Seed',
+    );
   }
 
   await app.close();

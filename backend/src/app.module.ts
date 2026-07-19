@@ -13,6 +13,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { ClientsModule } from './modules/clients/clients.module';
+import { DeliverablesModule } from './modules/deliverables/deliverables.module';
 import { DepartmentsModule } from './modules/departments/departments.module';
 import { DesignationsModule } from './modules/designations/designations.module';
 import { EmployeesModule } from './modules/employees/employees.module';
@@ -78,6 +79,7 @@ import { RedisModule } from './redis/redis.module';
     MilestonesModule,
     SprintsModule,
     TasksModule,
+    DeliverablesModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
