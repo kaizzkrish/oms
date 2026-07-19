@@ -177,6 +177,14 @@ export const router = createBrowserRouter([
               return { Component: MilestonesListPage };
             },
           },
+          {
+            path: 'sprints',
+            handle: { crumb: () => 'Sprints' },
+            lazy: async () => {
+              const { SprintsListPage } = await import('../features/sprints/SprintsListPage');
+              return { Component: SprintsListPage };
+            },
+          },
         ],
       },
     ],

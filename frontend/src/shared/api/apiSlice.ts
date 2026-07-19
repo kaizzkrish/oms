@@ -25,6 +25,7 @@ export const apiSlice = createApi({
     'ProjectModule',
     'Feature',
     'Milestone',
+    'Sprint',
   ],
   endpoints: () => ({}),
 });
