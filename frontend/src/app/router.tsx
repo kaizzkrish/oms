@@ -202,6 +202,15 @@ export const router = createBrowserRouter([
               return { Component: DeliverablesListPage };
             },
           },
+          {
+            path: 'references',
+            handle: { crumb: () => 'References' },
+            lazy: async () => {
+              const { ReferencesListPage } =
+                await import('../features/references/ReferencesListPage');
+              return { Component: ReferencesListPage };
+            },
+          },
         ],
       },
     ],

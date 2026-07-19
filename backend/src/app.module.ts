@@ -25,6 +25,7 @@ import { PermissionsGuard } from './modules/permissions/guards/permissions.guard
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { ProjectModulesModule } from './modules/project-modules/project-modules.module';
 import { ProjectsModule } from './modules/projects/projects.module';
+import { ReferencesModule } from './modules/references/references.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { SprintsModule } from './modules/sprints/sprints.module';
 import { TasksModule } from './modules/tasks/tasks.module';
@@ -80,6 +81,7 @@ import { RedisModule } from './redis/redis.module';
     SprintsModule,
     TasksModule,
     DeliverablesModule,
+    ReferencesModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

@@ -23,6 +23,7 @@ import { PermissionGroupsService } from '../src/modules/permission-groups/permis
 import { PermissionsService } from '../src/modules/permissions/permissions.service';
 import { ProjectModulesService } from '../src/modules/project-modules/project-modules.service';
 import { ProjectsService } from '../src/modules/projects/projects.service';
+import { ReferencesService } from '../src/modules/references/references.service';
 import { RolesService } from '../src/modules/roles/roles.service';
 import { SprintsService } from '../src/modules/sprints/sprints.service';
 import { TasksService } from '../src/modules/tasks/tasks.service';
@@ -99,6 +100,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Deliverable Management',
     description: 'Managing project deliverables',
+  },
+  {
+    name: 'Reference Management',
+    description: 'Managing project reference links',
   },
 ] as const;
 
@@ -476,6 +481,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore deliverables',
     group: 'Deliverable Management',
   },
+  {
+    name: 'References.View',
+    description: 'View references',
+    group: 'Reference Management',
+  },
+  {
+    name: 'References.Create',
+    description: 'Create references',
+    group: 'Reference Management',
+  },
+  {
+    name: 'References.Update',
+    description: 'Update references',
+    group: 'Reference Management',
+  },
+  {
+    name: 'References.Delete',
+    description: 'Delete or restore references',
+    group: 'Reference Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -499,6 +524,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Sprints.View',
   'Tasks.View',
   'Deliverables.View',
+  'References.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -623,6 +649,13 @@ const SAMPLE_DELIVERABLE = {
   dueDate: '2026-04-23',
 };
 
+const SAMPLE_REFERENCE = {
+  name: 'Design System Figma',
+  url: 'https://figma.com/file/example-design-system',
+  description: 'Shared Figma file with the redesigned component library',
+  type: 'DESIGN' as const,
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -645,6 +678,7 @@ async function main(): Promise<void> {
   const sprintsService = app.get(SprintsService);
   const tasksService = app.get(TasksService);
   const deliverablesService = app.get(DeliverablesService);
+  const referencesService = app.get(ReferencesService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -1166,6 +1200,31 @@ async function main(): Promise<void> {
       `Sample deliverable created: ${SAMPLE_DELIVERABLE.name}`,
       'Seed',
     );
+  }
+
+  const existingReferences = await referencesService.listReferences({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_REFERENCE.name,
+    projectId: project.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingReferences.items.length > 0) {
+    Logger.log(
+      `Sample reference already exists: ${SAMPLE_REFERENCE.name}`,
+      'Seed',
+    );
+  } else {
+    await referencesService.createReference(
+      {
+        ...SAMPLE_REFERENCE,
+        organizationId: organization.id,
+        projectId: project.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample reference created: ${SAMPLE_REFERENCE.name}`, 'Seed');
   }
 
   await app.close();

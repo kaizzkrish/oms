@@ -18,6 +18,7 @@ import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import DirectionsRunOutlinedIcon from '@mui/icons-material/DirectionsRunOutlined';
 import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined';
 import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
+import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
 import type { SvgIconComponent } from '@mui/icons-material';
 
 export interface NavItem {
@@ -137,6 +138,12 @@ export const navItems: NavItem[] = [
     path: '/deliverables',
     icon: AssignmentTurnedInOutlinedIcon,
     permission: 'Deliverables.View',
+  },
+  {
+    label: 'References',
+    path: '/references',
+    icon: LinkOutlinedIcon,
+    permission: 'References.View',
   },
   { label: 'Profile', path: '/profile', icon: PersonOutlineOutlinedIcon },
 ];

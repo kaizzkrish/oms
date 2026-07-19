@@ -28,6 +28,7 @@ export const apiSlice = createApi({
     'Sprint',
     'Task',
     'Deliverable',
+    'Reference',
   ],
   endpoints: () => ({}),
 });
