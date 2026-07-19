@@ -26,6 +26,7 @@ export const apiSlice = createApi({
     'Feature',
     'Milestone',
     'Sprint',
+    'Task',
   ],
   endpoints: () => ({}),
 });

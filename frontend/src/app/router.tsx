@@ -185,6 +185,14 @@ export const router = createBrowserRouter([
               return { Component: SprintsListPage };
             },
           },
+          {
+            path: 'tasks',
+            handle: { crumb: () => 'Tasks' },
+            lazy: async () => {
+              const { TasksListPage } = await import('../features/tasks/TasksListPage');
+              return { Component: TasksListPage };
+            },
+          },
         ],
       },
     ],

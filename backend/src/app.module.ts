@@ -26,6 +26,7 @@ import { ProjectModulesModule } from './modules/project-modules/project-modules.
 import { ProjectsModule } from './modules/projects/projects.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { SprintsModule } from './modules/sprints/sprints.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
@@ -76,6 +77,7 @@ import { RedisModule } from './redis/redis.module';
     FeaturesModule,
     MilestonesModule,
     SprintsModule,
+    TasksModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
