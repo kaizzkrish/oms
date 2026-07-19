@@ -193,6 +193,24 @@ export const router = createBrowserRouter([
               return { Component: TasksListPage };
             },
           },
+          {
+            path: 'deliverables',
+            handle: { crumb: () => 'Deliverables' },
+            lazy: async () => {
+              const { DeliverablesListPage } =
+                await import('../features/deliverables/DeliverablesListPage');
+              return { Component: DeliverablesListPage };
+            },
+          },
+          {
+            path: 'references',
+            handle: { crumb: () => 'References' },
+            lazy: async () => {
+              const { ReferencesListPage } =
+                await import('../features/references/ReferencesListPage');
+              return { Component: ReferencesListPage };
+            },
+          },
         ],
       },
     ],

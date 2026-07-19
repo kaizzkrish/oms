@@ -112,6 +112,14 @@ model User {
   updatedTasks Task[] @relation("TaskUpdatedBy")
   deletedTasks Task[] @relation("TaskDeletedBy")
 
+  createdDeliverables Deliverable[] @relation("DeliverableCreatedBy")
+  updatedDeliverables Deliverable[] @relation("DeliverableUpdatedBy")
+  deletedDeliverables Deliverable[] @relation("DeliverableDeletedBy")
+
+  createdReferences Reference[] @relation("ReferenceCreatedBy")
+  updatedReferences Reference[] @relation("ReferenceUpdatedBy")
+  deletedReferences Reference[] @relation("ReferenceDeletedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -267,6 +275,8 @@ model Organization {
   milestones     Milestone[]
   sprints        Sprint[]
   tasks          Task[]
+  deliverables   Deliverable[]
+  references     Reference[]
 
   @@index([name])
   @@map("organizations")
@@ -422,6 +432,7 @@ model Employee {
   milestonesOwned  Milestone[]     @relation("MilestoneOwner")
   sprintsFacilitated Sprint[]      @relation("SprintScrumMaster")
   tasksAssigned      Task[]        @relation("TaskAssignee")
+  deliverablesOwned  Deliverable[] @relation("DeliverableOwner")
 
   @@unique([organizationId, employeeCode])
   @@index([organizationId])
@@ -572,11 +583,13 @@ model Project {
   updatedByUser User? @relation("ProjectUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("ProjectDeletedBy", fields: [deletedBy], references: [id])
 
-  modules    ProjectModule[]
-  features   Feature[]
-  milestones Milestone[]
-  sprints    Sprint[]
-  tasks      Task[]
+  modules      ProjectModule[]
+  features     Feature[]
+  milestones   Milestone[]
+  sprints      Sprint[]
+  tasks        Task[]
+  deliverables Deliverable[]
+  references   Reference[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -703,6 +716,8 @@ model Milestone {
   updatedByUser User? @relation("MilestoneUpdatedBy", fields: [updatedBy], references: [id])
   deletedByUser User? @relation("MilestoneDeletedBy", fields: [deletedBy], references: [id])
 
+  deliverables Deliverable[]
+
   @@unique([projectId, name])
   @@index([organizationId])
   @@index([projectId])
@@ -800,6 +815,80 @@ model Task {
   @@index([sprintId])
   @@index([assigneeId])
   @@map("tasks")
+}
+
+model Deliverable {
+  id             String     @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String
+  project        Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestoneId    String?
+  milestone      Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  ownerId        String?
+  owner          Employee?  @relation("DeliverableOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  name        String
+  code        String?
+  description String?
+  type        String @default("DOCUMENT")
+  status      String @default("PENDING")
+
+  dueDate       DateTime?
+  submittedDate DateTime?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("DeliverableCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("DeliverableUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("DeliverableDeletedBy", fields: [deletedBy], references: [id])
+
+  @@unique([projectId, name])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([milestoneId])
+  @@index([ownerId])
+  @@map("deliverables")
+}
+
+model Reference {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name        String
+  url         String
+  description String?
+  type        String @default("LINK")
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("ReferenceCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("ReferenceUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("ReferenceDeletedBy", fields: [deletedBy], references: [id])
+
+  @@unique([projectId, name])
+  @@index([organizationId])
+  @@index([projectId])
+  @@map("references")
 }
 
 model Session {

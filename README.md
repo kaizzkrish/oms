@@ -89,8 +89,8 @@ authentication module`) once it builds, lints, and passes tests.
 | 20 | Milestones | Complete |
 | 21 | Sprints | Complete |
 | 22 | Tasks | Complete |
-| 23 | Deliverables | Pending |
-| 24 | References | Pending |
+| 23 | Deliverables | Complete |
+| 24 | References | Complete |
 | 25 | Documents | Pending |
 | 26 | Dashboard | Pending |
 | 27 | Reports | Pending |
