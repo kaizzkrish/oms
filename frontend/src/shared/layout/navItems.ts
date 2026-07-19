@@ -15,6 +15,8 @@ import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import ViewModuleOutlinedIcon from '@mui/icons-material/ViewModuleOutlined';
 import ExtensionOutlinedIcon from '@mui/icons-material/ExtensionOutlined';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
+import DirectionsRunOutlinedIcon from '@mui/icons-material/DirectionsRunOutlined';
+import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined';
 import type { SvgIconComponent } from '@mui/icons-material';
 
 export interface NavItem {
@@ -116,6 +118,18 @@ export const navItems: NavItem[] = [
     path: '/milestones',
     icon: FlagOutlinedIcon,
     permission: 'Milestones.View',
+  },
+  {
+    label: 'Sprints',
+    path: '/sprints',
+    icon: DirectionsRunOutlinedIcon,
+    permission: 'Sprints.View',
+  },
+  {
+    label: 'Tasks',
+    path: '/tasks',
+    icon: ChecklistOutlinedIcon,
+    permission: 'Tasks.View',
   },
   { label: 'Profile', path: '/profile', icon: PersonOutlineOutlinedIcon },
 ];

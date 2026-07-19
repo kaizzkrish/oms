@@ -23,6 +23,8 @@ import { PermissionsService } from '../src/modules/permissions/permissions.servi
 import { ProjectModulesService } from '../src/modules/project-modules/project-modules.service';
 import { ProjectsService } from '../src/modules/projects/projects.service';
 import { RolesService } from '../src/modules/roles/roles.service';
+import { SprintsService } from '../src/modules/sprints/sprints.service';
+import { TasksService } from '../src/modules/tasks/tasks.service';
 import { TeamsService } from '../src/modules/teams/teams.service';
 import { UsersService } from '../src/modules/users/users.service';
 
@@ -84,6 +86,14 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Milestone Management',
     description: 'Managing project milestones',
+  },
+  {
+    name: 'Sprint Management',
+    description: 'Managing sprints',
+  },
+  {
+    name: 'Task Management',
+    description: 'Managing tasks',
   },
 ] as const;
 
@@ -401,6 +411,46 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore milestones',
     group: 'Milestone Management',
   },
+  {
+    name: 'Sprints.View',
+    description: 'View sprints',
+    group: 'Sprint Management',
+  },
+  {
+    name: 'Sprints.Create',
+    description: 'Create sprints',
+    group: 'Sprint Management',
+  },
+  {
+    name: 'Sprints.Update',
+    description: 'Update sprints',
+    group: 'Sprint Management',
+  },
+  {
+    name: 'Sprints.Delete',
+    description: 'Delete or restore sprints',
+    group: 'Sprint Management',
+  },
+  {
+    name: 'Tasks.View',
+    description: 'View tasks',
+    group: 'Task Management',
+  },
+  {
+    name: 'Tasks.Create',
+    description: 'Create tasks',
+    group: 'Task Management',
+  },
+  {
+    name: 'Tasks.Update',
+    description: 'Update tasks',
+    group: 'Task Management',
+  },
+  {
+    name: 'Tasks.Delete',
+    description: 'Delete or restore tasks',
+    group: 'Task Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -421,6 +471,8 @@ const TEAM_LEADER_PERMISSIONS = [
   'ProjectModules.View',
   'Features.View',
   'Milestones.View',
+  'Sprints.View',
+  'Tasks.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -515,6 +567,27 @@ const SAMPLE_MILESTONE = {
   dueDate: '2026-04-30',
 };
 
+const SAMPLE_SPRINT = {
+  name: 'Sprint 1',
+  code: 'SPR-1',
+  goal: 'Ship the redesigned homepage hero and navigation',
+  status: 'ACTIVE' as const,
+  startDate: '2026-01-13',
+  endDate: '2026-01-27',
+};
+
+const SAMPLE_TASK = {
+  name: 'Build hero banner component',
+  code: 'HERO-1',
+  description:
+    'Implement the new hero banner React component with responsive layout',
+  type: 'TASK' as const,
+  status: 'IN_PROGRESS' as const,
+  priority: 'HIGH' as const,
+  dueDate: '2026-01-24',
+  estimatedHours: 12,
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -534,6 +607,8 @@ async function main(): Promise<void> {
   const projectModulesService = app.get(ProjectModulesService);
   const featuresService = app.get(FeaturesService);
   const milestonesService = app.get(MilestonesService);
+  const sprintsService = app.get(SprintsService);
+  const tasksService = app.get(TasksService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -932,10 +1007,11 @@ async function main(): Promise<void> {
     sortBy: 'name',
     sortOrder: 'asc',
   });
-  if (existingFeatures.items.length > 0) {
+  let feature = existingFeatures.items[0];
+  if (feature) {
     Logger.log(`Sample feature already exists: ${SAMPLE_FEATURE.name}`, 'Seed');
   } else {
-    await featuresService.createFeature(
+    feature = await featuresService.createFeature(
       {
         ...SAMPLE_FEATURE,
         organizationId: organization.id,
@@ -972,6 +1048,57 @@ async function main(): Promise<void> {
       adminUser?.id,
     );
     Logger.log(`Sample milestone created: ${SAMPLE_MILESTONE.name}`, 'Seed');
+  }
+
+  const existingSprints = await sprintsService.listSprints({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_SPRINT.name,
+    projectId: project.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  let sprint = existingSprints.items[0];
+  if (sprint) {
+    Logger.log(`Sample sprint already exists: ${SAMPLE_SPRINT.name}`, 'Seed');
+  } else {
+    sprint = await sprintsService.createSprint(
+      {
+        ...SAMPLE_SPRINT,
+        organizationId: organization.id,
+        projectId: project.id,
+        teamId: team.id,
+        scrumMasterId: employee.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample sprint created: ${SAMPLE_SPRINT.name}`, 'Seed');
+  }
+
+  const existingTasks = await tasksService.listTasks({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_TASK.name,
+    projectId: project.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingTasks.items.length > 0) {
+    Logger.log(`Sample task already exists: ${SAMPLE_TASK.name}`, 'Seed');
+  } else {
+    await tasksService.createTask(
+      {
+        ...SAMPLE_TASK,
+        organizationId: organization.id,
+        projectId: project.id,
+        moduleId: projectModule.id,
+        featureId: feature.id,
+        sprintId: sprint.id,
+        assigneeId: employee.id,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample task created: ${SAMPLE_TASK.name}`, 'Seed');
   }
 
   await app.close();
