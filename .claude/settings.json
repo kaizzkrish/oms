@@ -6,7 +6,10 @@
       "Bash(git commit -m ' *)",
       "Bash(git commit *)",
       "Bash(pnpm --filter backend add @prisma/client argon2)",
-      "Bash(pnpm --filter backend add -D prisma)"
+      "Bash(pnpm --filter backend add -D prisma)",
+      "Bash(npx prisma *)",
+      "Bash(npx jest *)",
+      "Bash(npx eslint *)"
     ]
   }
 }
