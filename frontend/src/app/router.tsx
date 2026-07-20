@@ -43,6 +43,14 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: 'dashboard',
+            handle: { crumb: () => 'Dashboard' },
+            lazy: async () => {
+              const { DashboardPage } = await import('../features/dashboard/DashboardPage');
+              return { Component: DashboardPage };
+            },
+          },
+          {
             path: 'profile',
             handle: { crumb: () => 'Profile' },
             lazy: async () => {

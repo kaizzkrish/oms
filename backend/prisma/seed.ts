@@ -110,6 +110,10 @@ const DEFAULT_PERMISSION_GROUPS = [
     name: 'Document Management',
     description: 'Managing project documents',
   },
+  {
+    name: 'Dashboard',
+    description: 'Viewing organization-wide summary metrics',
+  },
 ] as const;
 
 type PermissionGroupName = (typeof DEFAULT_PERMISSION_GROUPS)[number]['name'];
@@ -526,6 +530,11 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore documents',
     group: 'Document Management',
   },
+  {
+    name: 'Dashboard.View',
+    description: 'View the dashboard summary',
+    group: 'Dashboard',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -551,6 +560,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Deliverables.View',
   'References.View',
   'Documents.View',
+  'Dashboard.View',
 ];
 
 const SAMPLE_ORGANIZATION = {

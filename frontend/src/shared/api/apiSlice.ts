@@ -30,6 +30,7 @@ export const apiSlice = createApi({
     'Deliverable',
     'Reference',
     'Document',
+    'Dashboard',
   ],
   endpoints: () => ({}),
 });
