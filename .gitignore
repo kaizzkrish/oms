@@ -26,6 +26,13 @@ storage/**
 !storage/**/
 !storage/**/.gitkeep
 
+# Backend's runtime STORAGE_ROOT resolves relative to its own cwd (both
+# locally and in Docker), landing here rather than the repo-root storage/
+# above — ignore its contents the same way.
+backend/storage/**
+!backend/storage/**/
+!backend/storage/**/.gitkeep
+
 # IDE
 .vscode/*
 !.vscode/extensions.json

@@ -14,6 +14,7 @@ import { ClientsService } from '../src/modules/clients/clients.service';
 import { DeliverablesService } from '../src/modules/deliverables/deliverables.service';
 import { DepartmentsService } from '../src/modules/departments/departments.service';
 import { DesignationsService } from '../src/modules/designations/designations.service';
+import { DocumentsService } from '../src/modules/documents/documents.service';
 import { EmployeesService } from '../src/modules/employees/employees.service';
 import { FeaturesService } from '../src/modules/features/features.service';
 import { MilestonesService } from '../src/modules/milestones/milestones.service';
@@ -104,6 +105,10 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Reference Management',
     description: 'Managing project reference links',
+  },
+  {
+    name: 'Document Management',
+    description: 'Managing project documents',
   },
 ] as const;
 
@@ -501,6 +506,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'Delete or restore references',
     group: 'Reference Management',
   },
+  {
+    name: 'Documents.View',
+    description: 'View documents',
+    group: 'Document Management',
+  },
+  {
+    name: 'Documents.Create',
+    description: 'Upload documents',
+    group: 'Document Management',
+  },
+  {
+    name: 'Documents.Update',
+    description: 'Update documents',
+    group: 'Document Management',
+  },
+  {
+    name: 'Documents.Delete',
+    description: 'Delete or restore documents',
+    group: 'Document Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -525,6 +550,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'Tasks.View',
   'Deliverables.View',
   'References.View',
+  'Documents.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -656,6 +682,15 @@ const SAMPLE_REFERENCE = {
   type: 'DESIGN' as const,
 };
 
+const SAMPLE_DOCUMENT = {
+  name: 'Website Redesign - Statement of Work',
+  description: 'Signed statement of work for the website redesign engagement',
+  type: 'CONTRACT' as const,
+  fileName: 'statement-of-work.txt',
+  contents:
+    'Statement of Work: Website Redesign\n\nScope: Redesign the public marketing site, including the homepage hero, navigation, and footer.\n',
+};
+
 async function main(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn', 'log'],
@@ -679,6 +714,7 @@ async function main(): Promise<void> {
   const tasksService = app.get(TasksService);
   const deliverablesService = app.get(DeliverablesService);
   const referencesService = app.get(ReferencesService);
+  const documentsService = app.get(DocumentsService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -1225,6 +1261,40 @@ async function main(): Promise<void> {
       adminUser?.id,
     );
     Logger.log(`Sample reference created: ${SAMPLE_REFERENCE.name}`, 'Seed');
+  }
+
+  const existingDocuments = await documentsService.listDocuments({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_DOCUMENT.name,
+    projectId: project.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingDocuments.items.length > 0) {
+    Logger.log(
+      `Sample document already exists: ${SAMPLE_DOCUMENT.name}`,
+      'Seed',
+    );
+  } else {
+    const buffer = Buffer.from(SAMPLE_DOCUMENT.contents);
+    await documentsService.createDocument(
+      {
+        organizationId: organization.id,
+        projectId: project.id,
+        name: SAMPLE_DOCUMENT.name,
+        description: SAMPLE_DOCUMENT.description,
+        type: SAMPLE_DOCUMENT.type,
+      },
+      {
+        originalname: SAMPLE_DOCUMENT.fileName,
+        mimetype: 'text/plain',
+        size: buffer.byteLength,
+        buffer,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample document created: ${SAMPLE_DOCUMENT.name}`, 'Seed');
   }
 
   await app.close();

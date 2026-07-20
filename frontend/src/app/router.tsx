@@ -211,6 +211,14 @@ export const router = createBrowserRouter([
               return { Component: ReferencesListPage };
             },
           },
+          {
+            path: 'documents',
+            handle: { crumb: () => 'Documents' },
+            lazy: async () => {
+              const { DocumentsListPage } = await import('../features/documents/DocumentsListPage');
+              return { Component: DocumentsListPage };
+            },
+          },
         ],
       },
     ],
