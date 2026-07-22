@@ -43,6 +43,14 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: 'dashboard',
+            handle: { crumb: () => 'Dashboard' },
+            lazy: async () => {
+              const { DashboardPage } = await import('../features/dashboard/DashboardPage');
+              return { Component: DashboardPage };
+            },
+          },
+          {
             path: 'profile',
             handle: { crumb: () => 'Profile' },
             lazy: async () => {
@@ -209,6 +217,14 @@ export const router = createBrowserRouter([
               const { ReferencesListPage } =
                 await import('../features/references/ReferencesListPage');
               return { Component: ReferencesListPage };
+            },
+          },
+          {
+            path: 'documents',
+            handle: { crumb: () => 'Documents' },
+            lazy: async () => {
+              const { DocumentsListPage } = await import('../features/documents/DocumentsListPage');
+              return { Component: DocumentsListPage };
             },
           },
         ],

@@ -91,8 +91,8 @@ authentication module`) once it builds, lints, and passes tests.
 | 22 | Tasks | Complete |
 | 23 | Deliverables | Complete |
 | 24 | References | Complete |
-| 25 | Documents | Pending |
-| 26 | Dashboard | Pending |
+| 25 | Documents | Complete |
+| 26 | Dashboard | Complete |
 | 27 | Reports | Pending |
 | 28 | Notifications | Pending |
 | 29 | Audit Logs | Pending |
