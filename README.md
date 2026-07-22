@@ -94,7 +94,7 @@ authentication module`) once it builds, lints, and passes tests.
 | 25 | Documents | Complete |
 | 26 | Dashboard | Complete |
 | 27 | Reports | Complete |
-| 28 | Notifications | Pending |
+| 28 | Notifications | Complete |
 | 29 | Audit Logs | Pending |
 | 30 | Settings / System Configuration | Pending |
 

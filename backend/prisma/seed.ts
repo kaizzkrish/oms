@@ -119,6 +119,10 @@ const DEFAULT_PERMISSION_GROUPS = [
     name: 'Report Management',
     description: 'Generating and managing exported reports',
   },
+  {
+    name: 'Notification Management',
+    description: 'Sending notifications to other users',
+  },
 ] as const;
 
 type PermissionGroupName = (typeof DEFAULT_PERMISSION_GROUPS)[number]['name'];
@@ -554,6 +558,11 @@ const DEFAULT_PERMISSIONS: {
     name: 'Reports.Delete',
     description: 'Delete or restore reports',
     group: 'Report Management',
+  },
+  {
+    name: 'Notifications.Create',
+    description: 'Send a notification to another user',
+    group: 'Notification Management',
   },
 ];
 

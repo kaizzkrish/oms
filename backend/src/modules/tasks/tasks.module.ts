@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { EmployeesModule } from '../employees/employees.module';
 import { FeaturesModule } from '../features/features.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { ProjectModulesModule } from '../project-modules/project-modules.module';
 import { ProjectsModule } from '../projects/projects.module';
@@ -17,6 +18,7 @@ import { TasksService } from './tasks.service';
     FeaturesModule,
     SprintsModule,
     EmployeesModule,
+    NotificationsModule,
   ],
   controllers: [TasksController],
   providers: [TasksRepository, TasksService],

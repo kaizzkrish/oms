@@ -59,6 +59,15 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: 'notifications',
+            handle: { crumb: () => 'Notifications' },
+            lazy: async () => {
+              const { NotificationsListPage } =
+                await import('../features/notifications/NotificationsListPage');
+              return { Component: NotificationsListPage };
+            },
+          },
+          {
             path: 'profile',
             handle: { crumb: () => 'Profile' },
             lazy: async () => {

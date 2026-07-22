@@ -21,6 +21,7 @@ import { DocumentsModule } from './modules/documents/documents.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { FeaturesModule } from './modules/features/features.module';
 import { MilestonesModule } from './modules/milestones/milestones.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OfficesModule } from './modules/offices/offices.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { PermissionsGuard } from './modules/permissions/guards/permissions.guard';
@@ -88,6 +89,7 @@ import { RedisModule } from './redis/redis.module';
     DocumentsModule,
     DashboardModule,
     ReportsModule,
+    NotificationsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

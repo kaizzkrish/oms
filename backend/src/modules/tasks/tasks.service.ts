@@ -8,6 +8,7 @@ import type { PaginatedResult } from '../../common/interfaces/paginated-result.i
 import { buildPaginationMeta } from '../../common/interfaces/paginated-result.interface';
 import { EmployeesService } from '../employees/employees.service';
 import { FeaturesService } from '../features/features.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { OrganizationsService } from '../organizations/organizations.service';
 import { ProjectModulesService } from '../project-modules/project-modules.service';
 import { ProjectsService } from '../projects/projects.service';
@@ -27,6 +28,7 @@ export class TasksService {
     private readonly featuresService: FeaturesService,
     private readonly sprintsService: SprintsService,
     private readonly employeesService: EmployeesService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async getTaskOrThrow(id: string): Promise<Task> {
@@ -120,6 +122,29 @@ export class TasksService {
     }
   }
 
+  /**
+   * Notifies a newly (re)assigned employee's user account. The one
+   * concrete producer wired into the Notifications module (Module 28) —
+   * documented in docs/modules/28-notifications.md.
+   */
+  private async notifyAssignee(
+    assigneeId: string,
+    task: Task,
+    actingUserId?: string,
+  ): Promise<void> {
+    const employee = await this.employeesService.getEmployeeOrThrow(assigneeId);
+    await this.notificationsService.notifyUser(
+      employee.userId,
+      {
+        type: 'TASK_ASSIGNED',
+        title: 'New task assigned',
+        message: `You were assigned to "${task.name}"`,
+        link: '/tasks',
+      },
+      actingUserId,
+    );
+  }
+
   async createTask(dto: CreateTaskDto, createdBy?: string): Promise<Task> {
     await this.organizationsService.getOrganizationOrThrow(dto.organizationId);
     await this.assertProjectBelongsToOrganization(
@@ -143,11 +168,17 @@ export class TasksService {
       );
     }
 
-    return this.tasksRepository.create({
+    const task = await this.tasksRepository.create({
       ...dto,
       dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
       createdBy,
     });
+
+    if (dto.assigneeId) {
+      await this.notifyAssignee(dto.assigneeId, task, createdBy);
+    }
+
+    return task;
   }
 
   async updateTask(
@@ -186,7 +217,7 @@ export class TasksService {
       );
     }
 
-    return this.tasksRepository.update(id, {
+    const task = await this.tasksRepository.update(id, {
       ...dto,
       dueDate:
         dto.dueDate === null
@@ -196,6 +227,12 @@ export class TasksService {
             : undefined,
       updatedBy,
     });
+
+    if (dto.assigneeId && dto.assigneeId !== existing.assigneeId) {
+      await this.notifyAssignee(dto.assigneeId, task, updatedBy);
+    }
+
+    return task;
   }
 
   async deleteTask(id: string, deletedBy?: string): Promise<void> {
