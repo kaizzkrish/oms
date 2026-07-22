@@ -21,6 +21,7 @@ import { DocumentsModule } from './modules/documents/documents.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { FeaturesModule } from './modules/features/features.module';
 import { MilestonesModule } from './modules/milestones/milestones.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OfficesModule } from './modules/offices/offices.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { PermissionsGuard } from './modules/permissions/guards/permissions.guard';
@@ -28,6 +29,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { ProjectModulesModule } from './modules/project-modules/project-modules.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { ReferencesModule } from './modules/references/references.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { SprintsModule } from './modules/sprints/sprints.module';
 import { TasksModule } from './modules/tasks/tasks.module';
@@ -86,6 +88,8 @@ import { RedisModule } from './redis/redis.module';
     ReferencesModule,
     DocumentsModule,
     DashboardModule,
+    ReportsModule,
+    NotificationsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

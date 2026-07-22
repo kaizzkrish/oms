@@ -9,6 +9,7 @@ import type {
 import type { EmployeeWithUser } from '../employees/entities/employee.entity';
 import type { EmployeesService } from '../employees/employees.service';
 import type { FeaturesService } from '../features/features.service';
+import type { NotificationsService } from '../notifications/notifications.service';
 import type { OrganizationsService } from '../organizations/organizations.service';
 import type { OrganizationWithOfficeCount } from '../organizations/entities/organization.entity';
 import type { ProjectModulesService } from '../project-modules/project-modules.service';
@@ -214,6 +215,7 @@ describe('TasksService', () => {
   let featuresService: jest.Mocked<FeaturesService>;
   let sprintsService: jest.Mocked<SprintsService>;
   let employeesService: jest.Mocked<EmployeesService>;
+  let notificationsService: jest.Mocked<NotificationsService>;
   let service: TasksService;
 
   beforeEach(() => {
@@ -250,6 +252,10 @@ describe('TasksService', () => {
       getEmployeeOrThrow: jest.fn(),
     } as unknown as jest.Mocked<EmployeesService>;
 
+    notificationsService = {
+      notifyUser: jest.fn(),
+    } as unknown as jest.Mocked<NotificationsService>;
+
     service = new TasksService(
       repository,
       organizationsService,
@@ -258,6 +264,7 @@ describe('TasksService', () => {
       featuresService,
       sprintsService,
       employeesService,
+      notificationsService,
     );
   });
 
@@ -434,6 +441,58 @@ describe('TasksService', () => {
       ).rejects.toThrow(BadRequestException);
       expect(repository.create).not.toHaveBeenCalled();
     });
+
+    it('notifies the assignee once the task is created', async () => {
+      organizationsService.getOrganizationOrThrow.mockResolvedValue(
+        createOrgFixture(),
+      );
+      projectsService.getProjectOrThrow.mockResolvedValue(
+        createProjectFixture(),
+      );
+      employeesService.getEmployeeOrThrow.mockResolvedValue(
+        createEmployeeFixture(),
+      );
+      repository.create.mockResolvedValue(
+        createTaskFixture({ assigneeId: 'employee-1' }),
+      );
+
+      await service.createTask(
+        {
+          organizationId: 'org-1',
+          projectId: 'project-1',
+          assigneeId: 'employee-1',
+          name: 'Build hero banner component',
+        },
+        'admin-1',
+      );
+
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'user-1',
+        expect.objectContaining({
+          type: 'TASK_ASSIGNED',
+          message: expect.stringContaining('Build hero banner component'),
+        }),
+        'admin-1',
+      );
+    });
+
+    it('does not notify anyone when no assignee is set', async () => {
+      organizationsService.getOrganizationOrThrow.mockResolvedValue(
+        createOrgFixture(),
+      );
+      projectsService.getProjectOrThrow.mockResolvedValue(
+        createProjectFixture(),
+      );
+      repository.create.mockResolvedValue(createTaskFixture());
+
+      await service.createTask({
+        organizationId: 'org-1',
+        projectId: 'project-1',
+        name: 'Build hero banner component',
+      });
+
+      expect(notificationsService.notifyUser).not.toHaveBeenCalled();
+    });
   });
 
   describe('updateTask', () => {
@@ -522,6 +581,50 @@ describe('TasksService', () => {
         service.updateTask('task-1', { assigneeId: 'employee-2' }),
       ).rejects.toThrow(BadRequestException);
       expect(repository.update).not.toHaveBeenCalled();
+    });
+
+    it('notifies the newly assigned employee when the assignee changes', async () => {
+      repository.findById.mockResolvedValue(
+        createTaskFixture({ assigneeId: 'employee-1' }),
+      );
+      employeesService.getEmployeeOrThrow.mockResolvedValue(
+        createEmployeeFixture({ id: 'employee-2', userId: 'user-2' }),
+      );
+      repository.update.mockResolvedValue(
+        createTaskFixture({ assigneeId: 'employee-2' }),
+      );
+
+      await service.updateTask(
+        'task-1',
+        { assigneeId: 'employee-2' },
+        'admin-1',
+      );
+
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'user-2',
+        expect.objectContaining({ type: 'TASK_ASSIGNED' }),
+        'admin-1',
+      );
+    });
+
+    it('does not notify anyone when the assignee is unchanged', async () => {
+      repository.findById.mockResolvedValue(
+        createTaskFixture({ assigneeId: 'employee-1' }),
+      );
+      employeesService.getEmployeeOrThrow.mockResolvedValue(
+        createEmployeeFixture(),
+      );
+      repository.update.mockResolvedValue(
+        createTaskFixture({ assigneeId: 'employee-1' }),
+      );
+
+      await service.updateTask(
+        'task-1',
+        { assigneeId: 'employee-1', description: 'Just a metadata edit' },
+        'admin-1',
+      );
+
+      expect(notificationsService.notifyUser).not.toHaveBeenCalled();
     });
   });
 

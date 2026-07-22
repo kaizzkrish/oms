@@ -25,6 +25,7 @@ import { PermissionsService } from '../src/modules/permissions/permissions.servi
 import { ProjectModulesService } from '../src/modules/project-modules/project-modules.service';
 import { ProjectsService } from '../src/modules/projects/projects.service';
 import { ReferencesService } from '../src/modules/references/references.service';
+import { ReportsService } from '../src/modules/reports/reports.service';
 import { RolesService } from '../src/modules/roles/roles.service';
 import { SprintsService } from '../src/modules/sprints/sprints.service';
 import { TasksService } from '../src/modules/tasks/tasks.service';
@@ -113,6 +114,14 @@ const DEFAULT_PERMISSION_GROUPS = [
   {
     name: 'Dashboard',
     description: 'Viewing organization-wide summary metrics',
+  },
+  {
+    name: 'Report Management',
+    description: 'Generating and managing exported reports',
+  },
+  {
+    name: 'Notification Management',
+    description: 'Sending notifications to other users',
   },
 ] as const;
 
@@ -535,6 +544,26 @@ const DEFAULT_PERMISSIONS: {
     description: 'View the dashboard summary',
     group: 'Dashboard',
   },
+  {
+    name: 'Reports.View',
+    description: 'View generated reports',
+    group: 'Report Management',
+  },
+  {
+    name: 'Reports.Export',
+    description: 'Generate new reports',
+    group: 'Report Management',
+  },
+  {
+    name: 'Reports.Delete',
+    description: 'Delete or restore reports',
+    group: 'Report Management',
+  },
+  {
+    name: 'Notifications.Create',
+    description: 'Send a notification to another user',
+    group: 'Notification Management',
+  },
 ];
 
 // A Team Leader gets read-only visibility into the access-control screens;
@@ -561,6 +590,7 @@ const TEAM_LEADER_PERMISSIONS = [
   'References.View',
   'Documents.View',
   'Dashboard.View',
+  'Reports.View',
 ];
 
 const SAMPLE_ORGANIZATION = {
@@ -692,6 +722,11 @@ const SAMPLE_REFERENCE = {
   type: 'DESIGN' as const,
 };
 
+const SAMPLE_REPORT = {
+  name: 'Sample Tasks Report',
+  type: 'TASKS' as const,
+};
+
 const SAMPLE_DOCUMENT = {
   name: 'Website Redesign - Statement of Work',
   description: 'Signed statement of work for the website redesign engagement',
@@ -725,6 +760,7 @@ async function main(): Promise<void> {
   const deliverablesService = app.get(DeliverablesService);
   const referencesService = app.get(ReferencesService);
   const documentsService = app.get(DocumentsService);
+  const reportsService = app.get(ReportsService);
 
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@oms.local';
   const password = process.env.SEED_ADMIN_PASSWORD ?? 'ChangeMe123!';
@@ -1305,6 +1341,28 @@ async function main(): Promise<void> {
       adminUser?.id,
     );
     Logger.log(`Sample document created: ${SAMPLE_DOCUMENT.name}`, 'Seed');
+  }
+
+  const existingReports = await reportsService.listReports({
+    page: 1,
+    limit: 1,
+    search: SAMPLE_REPORT.name,
+    organizationId: organization.id,
+    sortBy: 'name',
+    sortOrder: 'asc',
+  });
+  if (existingReports.items.length > 0) {
+    Logger.log(`Sample report already exists: ${SAMPLE_REPORT.name}`, 'Seed');
+  } else {
+    await reportsService.generateReport(
+      {
+        organizationId: organization.id,
+        type: SAMPLE_REPORT.type,
+        name: SAMPLE_REPORT.name,
+      },
+      adminUser?.id,
+    );
+    Logger.log(`Sample report created: ${SAMPLE_REPORT.name}`, 'Seed');
   }
 
   await app.close();

@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { toggleSidebar, toggleThemeMode } from '../../app/uiSlice';
 import { useLogoutMutation } from '../../features/auth/authApi';
+import { NotificationBell } from './NotificationBell';
 
 export function TopNav() {
   const dispatch = useAppDispatch();
@@ -43,6 +44,7 @@ export function TopNav() {
             {themeMode === 'light' ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
           </IconButton>
         </Tooltip>
+        {user ? <NotificationBell /> : null}
         {user ? (
           <Tooltip title={`Sign out (${user.email})`}>
             <IconButton aria-label="sign out" onClick={() => void handleLogout()}>

@@ -51,6 +51,23 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: 'reports',
+            handle: { crumb: () => 'Reports' },
+            lazy: async () => {
+              const { ReportsListPage } = await import('../features/reports/ReportsListPage');
+              return { Component: ReportsListPage };
+            },
+          },
+          {
+            path: 'notifications',
+            handle: { crumb: () => 'Notifications' },
+            lazy: async () => {
+              const { NotificationsListPage } =
+                await import('../features/notifications/NotificationsListPage');
+              return { Component: NotificationsListPage };
+            },
+          },
+          {
             path: 'profile',
             handle: { crumb: () => 'Profile' },
             lazy: async () => {
