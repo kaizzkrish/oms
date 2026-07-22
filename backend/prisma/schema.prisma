@@ -124,6 +124,10 @@ model User {
   updatedDocuments Document[] @relation("DocumentUpdatedBy")
   deletedDocuments Document[] @relation("DocumentDeletedBy")
 
+  createdReports Report[] @relation("ReportCreatedBy")
+  updatedReports Report[] @relation("ReportUpdatedBy")
+  deletedReports Report[] @relation("ReportDeletedBy")
+
   @@index([email])
   @@map("users")
 }
@@ -282,6 +286,7 @@ model Organization {
   deliverables   Deliverable[]
   references     Reference[]
   documents      Document[]
+  reports        Report[]
 
   @@index([name])
   @@map("organizations")
@@ -930,6 +935,37 @@ model Document {
   @@index([organizationId])
   @@index([projectId])
   @@map("documents")
+}
+
+model Report {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  name        String
+  type        String
+  format      String @default("CSV")
+  fileName    String
+  storagePath String
+  mimeType    String
+  sizeBytes   Int
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  createdBy String?
+  updatedBy String?
+  deletedBy String?
+
+  createdByUser User? @relation("ReportCreatedBy", fields: [createdBy], references: [id])
+  updatedByUser User? @relation("ReportUpdatedBy", fields: [updatedBy], references: [id])
+  deletedByUser User? @relation("ReportDeletedBy", fields: [deletedBy], references: [id])
+
+  @@index([organizationId])
+  @@map("reports")
 }
 
 model Session {

@@ -21,6 +21,7 @@ import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurned
 import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import type { SvgIconComponent } from '@mui/icons-material';
 
 export interface NavItem {
@@ -158,6 +159,12 @@ export const navItems: NavItem[] = [
     path: '/dashboard',
     icon: DashboardOutlinedIcon,
     permission: 'Dashboard.View',
+  },
+  {
+    label: 'Reports',
+    path: '/reports',
+    icon: AssessmentOutlinedIcon,
+    permission: 'Reports.View',
   },
   { label: 'Profile', path: '/profile', icon: PersonOutlineOutlinedIcon },
 ];
